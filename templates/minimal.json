@@ -1,0 +1,10 @@
+{
+  "title": "Minimal",
+  "description": "Large condensed type on white, framed in the accent colour",
+  "fields": {
+    "title": "Less, but better",
+    "description": "A quiet template for quotes, announcements and chapter titles.",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "accent": "#0A7CF6"
+  }
+}

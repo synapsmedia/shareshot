@@ -1,0 +1,109 @@
+@import url('https://fonts.bunny.net/css?family=fraunces:500,600|inter:400,500,600,700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 1rem is about 1% of the width, less on wide banners, so one layout fits
+   every size from 1200×630 to a 1080×1920 story. */
+html { font-size: min(1vw, 1.6vh); }
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  --on-accent: oklch(from var(--accent) clamp(0, (0.72 - l) * 100, 1) 0 0);
+}
+
+img { display: block; }
+
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 3);
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #17181B;
+  background: #FBFAF6;
+  --accent-dark: oklch(from var(--accent) min(l, 0.5) c h);
+}
+
+main {
+  height: 100%;
+  padding: 6rem 7rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4rem;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+  padding-bottom: 2.6rem;
+  border-bottom: 0.5rem double var(--accent-dark);
+}
+
+.site { display: flex; align-items: center; gap: 1.6rem; }
+
+.logo { width: 5rem; height: 5rem; border-radius: 1.2rem; object-fit: cover; }
+
+.site-name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 3.2rem;
+  font-weight: 600;
+}
+
+.issue {
+  color: var(--accent-dark);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+h1 {
+  max-width: 100rem;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 7.2rem;
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.description {
+  --lines: 2;
+  max-width: 88rem;
+  margin-top: 2.6rem;
+  color: #55575E;
+  font-size: 2.7rem;
+  line-height: 1.45;
+}
+
+footer {
+  display: flex;
+  gap: 3.2rem;
+  padding-top: 2.4rem;
+  border-top: 0.1rem solid #D9D6CE;
+  color: #6A6C72;
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+footer:not(:has(span)) { visibility: hidden; }
+
+@media (orientation: portrait) {
+  main { padding: 8rem; }
+  .content { margin-block: auto; }
+  .site-name { font-size: 4rem; }
+  .issue, footer { font-size: 2.6rem; }
+  h1 { --lines: 6; font-size: 10rem; }
+  .description { --lines: 5; font-size: 3.6rem; }
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Centered",
+  "description": "Logo, headline and summary centred on the accent colour",
+  "fields": {
+    "title": "A field guide to slow mornings",
+    "description": "Twelve small rituals from readers around the world.",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "date": "Oct 28, 2026",
+    "accent": "#1F6F5C"
+  }
+}

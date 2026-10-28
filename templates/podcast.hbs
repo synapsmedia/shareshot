@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{title}}</title>
+  <style>:root { --accent: {{cssColor accent "#A855F7"}}; }</style>
+  {{{styleTag}}}
+</head>
+<body>
+  <main>
+    <div class="cover-box">
+      <div class="cover">{{#if image}}<img src="{{image}}" alt="">{{else if logo}}<img src="{{logo}}" alt="">{{/if}}</div>
+    </div>
+    <div class="content">
+      {{#if siteName}}<p class="show">{{siteName}}</p>{{/if}}
+      {{#if episode}}<p class="episode">{{episode}}</p>{{/if}}
+      <h1 class="clamp">{{title}}</h1>
+      {{#if author}}<p class="author">{{author}}</p>{{/if}}
+      <div class="player">
+        <span class="play" aria-hidden="true"></span>
+        <span class="wave" aria-hidden="true"><span style="--h: 0.22"></span><span style="--h: 0.36"></span><span style="--h: 0.32"></span><span style="--h: 0.27"></span><span style="--h: 0.39"></span><span style="--h: 0.36"></span><span style="--h: 0.30"></span><span style="--h: 0.62"></span><span style="--h: 0.88"></span><span style="--h: 0.95"></span><span style="--h: 0.77"></span><span style="--h: 0.40"></span><span style="--h: 0.45"></span><span style="--h: 0.71"></span><span style="--h: 0.76"></span><span style="--h: 0.60"></span><span style="--h: 0.38"></span><span style="--h: 0.23"></span><span style="--h: 0.24"></span><span style="--h: 0.40"></span><span style="--h: 0.59"></span><span style="--h: 0.65"></span><span style="--h: 0.50"></span><span style="--h: 0.28"></span><span style="--h: 0.67"></span><span style="--h: 0.94"></span><span style="--h: 0.98"></span><span style="--h: 0.77"></span><span style="--h: 0.42"></span><span style="--h: 0.35"></span><span style="--h: 0.51"></span><span style="--h: 0.48"></span><span style="--h: 0.32"></span><span style="--h: 0.26"></span><span style="--h: 0.25"></span><span style="--h: 0.36"></span><span style="--h: 0.63"></span><span style="--h: 0.84"></span><span style="--h: 0.84"></span><span style="--h: 0.61"></span><span style="--h: 0.23"></span><span style="--h: 0.63"></span><span style="--h: 0.86"></span><span style="--h: 0.86"></span><span style="--h: 0.65"></span><span style="--h: 0.37"></span><span style="--h: 0.26"></span><span style="--h: 0.28"></span><span style="--h: 0.28"></span><span style="--h: 0.44"></span><span style="--h: 0.48"></span><span style="--h: 0.33"></span><span style="--h: 0.42"></span><span style="--h: 0.76"></span><span style="--h: 0.97"></span><span style="--h: 0.94"></span></span>
+        {{#if duration}}<span class="duration">{{duration}}</span>{{/if}}
+      </div>
+    </div>
+  </main>
+</body>
+</html>

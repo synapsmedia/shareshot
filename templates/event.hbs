@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{title}}</title>
+  <style>:root { --accent: {{cssColor accent "#2563EB"}}; }</style>
+  {{{styleTag}}}
+</head>
+<body>
+  <main>
+    {{#if eventDate}}
+    <div class="when">
+      <span class="month">{{formatDate eventDate "MMM"}}</span>
+      <span class="day">{{formatDate eventDate "d"}}</span>
+      <span class="weekday">{{formatDate eventDate "EEEE"}}</span>
+    </div>
+    {{/if}}
+    <div class="body">
+      <div class="content">
+        {{#if tag}}<p class="tag">{{tag}}</p>{{/if}}
+        <h1 class="clamp">{{title}}</h1>
+        {{#if description}}<p class="description clamp">{{description}}</p>{{/if}}
+        <ul class="details">
+          {{#if time}}<li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>{{time}}</li>{{/if}}
+          {{#if location}}<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>{{location}}</li>{{/if}}
+        </ul>
+      </div>
+      <footer class="site">{{#if logo}}<img class="logo" src="{{logo}}" alt="">{{/if}}{{#if siteName}}<span class="site-name">{{siteName}}</span>{{/if}}</footer>
+    </div>
+  </main>
+</body>
+</html>

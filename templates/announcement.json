@@ -1,0 +1,13 @@
+{
+  "title": "Announcement",
+  "description": "A badge such as New or v2.0, a headline and a date, for releases and news",
+  "fields": {
+    "badge": "v2.0",
+    "title": "Scheduled newsletters are here",
+    "description": "Write today, send on Tuesday at nine, in every reader's own timezone.",
+    "date": "Oct 28, 2026",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#7C3AED"
+  }
+}

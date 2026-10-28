@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{title}}</title>
+  <style>:root { --accent: {{cssColor accent "#15803D"}}; }</style>
+  {{{styleTag}}}
+</head>
+<body>
+  <main>
+    <header class="site">{{#if logo}}<img class="logo" src="{{logo}}" alt="">{{/if}}{{#if siteName}}<span class="site-name">{{siteName}}</span>{{/if}}</header>
+    <div class="content">
+      {{#if title}}<h1 class="clamp">{{title}}</h1>{{/if}}
+      <p class="value">{{value}}</p>
+      {{#if label}}<p class="label clamp">{{label}}</p>{{/if}}
+    </div>
+  </main>
+</body>
+</html>

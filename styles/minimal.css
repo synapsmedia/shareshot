@@ -1,0 +1,78 @@
+@import url('https://fonts.bunny.net/css?family=antonio:700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 1rem is about 1% of the width, less on wide banners, so one layout fits
+   every size from 1200×630 to a 1080×1920 story. */
+html { font-size: min(1vw, 1.6vh); }
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  --on-accent: oklch(from var(--accent) clamp(0, (0.72 - l) * 100, 1) 0 0);
+}
+
+img { display: block; }
+
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 3);
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14rem;
+  border: 2.4rem solid var(--accent);
+  background: #FFFFFF;
+  color: #000000;
+  font-family: 'Antonio', 'Arial Narrow', sans-serif;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+main { width: 100%; }
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 3.2rem;
+  margin-bottom: 3.2rem;
+}
+
+.logo::before, .logo::after {
+  content: '';
+  flex: 1;
+  height: 0.5rem;
+  background: var(--accent);
+}
+
+.logo img { height: 8rem; width: auto; max-width: 30rem; }
+
+h1 {
+  margin-bottom: 3rem;
+  font-size: 8rem;
+  line-height: 1;
+}
+
+p {
+  --lines: 2;
+  font-size: 3.6rem;
+  line-height: 1.35;
+}
+
+.divider {
+  height: 0.5rem;
+  margin-top: 3.6rem;
+  background: var(--accent);
+}
+
+@media (orientation: portrait) {
+  body { padding: 0 10rem; }
+  h1 { --lines: 5; font-size: 13rem; }
+  p { --lines: 4; font-size: 4.4rem; }
+}

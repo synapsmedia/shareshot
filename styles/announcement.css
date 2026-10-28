@@ -1,0 +1,104 @@
+@import url('https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 1rem is about 1% of the width, less on wide banners, so one layout fits
+   every size from 1200×630 to a 1080×1920 story. */
+html { font-size: min(1vw, 1.6vh); }
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  --on-accent: oklch(from var(--accent) clamp(0, (0.72 - l) * 100, 1) 0 0);
+}
+
+img { display: block; }
+
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 3);
+  overflow: hidden;
+}
+
+body {
+  position: relative;
+  border-top: 1.2rem solid var(--accent);
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #121317;
+  background: #FFFFFF;
+}
+
+.watermark {
+  position: absolute;
+  right: -1rem;
+  bottom: -7rem;
+  color: color-mix(in oklch, var(--accent) 11%, transparent);
+  font-size: 34rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+}
+
+main {
+  position: relative;
+  height: 100%;
+  padding: 6rem 7rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4rem;
+}
+
+header, .site {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.badge {
+  padding: 1rem 2.2rem;
+  border-radius: 10rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.date { color: #6B6F7A; font-size: 2.2rem; font-weight: 500; }
+
+h1 {
+  max-width: 96rem;
+  font-size: 7.4rem;
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.description {
+  --lines: 2;
+  max-width: 84rem;
+  margin-top: 2.6rem;
+  color: #50545E;
+  font-size: 2.8rem;
+  line-height: 1.45;
+}
+
+.logo { width: 5rem; height: 5rem; border-radius: 1.2rem; object-fit: cover; }
+
+.site-name { font-size: 2.6rem; font-weight: 700; }
+
+@media (orientation: portrait) {
+  main { padding: 8rem; }
+  .content { margin-block: auto; }
+  .watermark { font-size: 44rem; bottom: -6rem; }
+  .badge, .date { font-size: 3rem; }
+  h1 { --lines: 6; font-size: 9.6rem; }
+  .description { --lines: 4; font-size: 3.6rem; }
+  .site-name { font-size: 3.2rem; }
+  .logo { width: 6.4rem; height: 6.4rem; }
+}

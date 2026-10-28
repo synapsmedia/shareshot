@@ -1,0 +1,14 @@
+{
+  "title": "Newsletter",
+  "description": "A masthead with the issue, and a serif headline, for newsletter issues",
+  "fields": {
+    "issue": "Issue 42",
+    "title": "Notes on doing fewer things, better",
+    "description": "This week: the case for a shorter reading list, a reader's mailbag, and three links worth your Sunday.",
+    "date": "Oct 28, 2026",
+    "author": "Ada Lindqvist",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#0F766E"
+  }
+}

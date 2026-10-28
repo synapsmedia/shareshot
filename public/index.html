@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shareshot by Synaps Media</title>
+  <meta name="description" content="Open Graph and social media images, rendered on the fly from HTML templates.">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">
+      <img src="icon.svg" alt="">
+      Shareshot
+    </a>
+    <span class="tagline">Social images from HTML templates</span>
+    <nav>
+      <a class="repo-link" data-path="#api" href="https://github.com/synapsmedia/shareshot#api">API</a>
+      <a class="repo-link" data-path="" href="https://github.com/synapsmedia/shareshot">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </header>
+
+  <main class="workspace">
+    <form class="panel" id="form" novalidate>
+      <section>
+        <h2><label for="sources">Data</label></h2>
+        <div class="field">
+          <select id="sources">
+            <button><selectedcontent></selectedcontent></button>
+          </select>
+        </div>
+        <p class="hint" id="sourceHint"></p>
+      </section>
+
+      <section>
+        <h2>Template</h2>
+        <div class="gallery" id="gallery"></div>
+      </section>
+
+      <section>
+        <h2>Content</h2>
+        <div id="fields"></div>
+      </section>
+
+      <section>
+        <h2>Output</h2>
+        <div class="field">
+          <label for="preset">Size</label>
+          <select id="preset">
+            <button><selectedcontent></selectedcontent></button>
+            <option value="1200x630"><span>Open Graph</span><span class="dim"><span class="sep"> · </span>1200 × 630</span></option>
+            <option value="1080x1080"><span>Square post</span><span class="dim"><span class="sep"> · </span>1080 × 1080</span></option>
+            <option value="1080x1350"><span>Portrait post</span><span class="dim"><span class="sep"> · </span>1080 × 1350</span></option>
+            <option value="1080x1920"><span>Story</span><span class="dim"><span class="sep"> · </span>1080 × 1920</span></option>
+            <option value="custom"><span>Custom</span></option>
+          </select>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="width">Width</label>
+            <input id="width" type="number" min="1" max="4096" value="1200" required>
+          </div>
+          <div class="field">
+            <label for="height">Height</label>
+            <input id="height" type="number" min="1" max="4096" value="630" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Scale</label>
+            <div class="segmented" id="dpr" role="group" aria-label="Scale">
+              <button type="button" value="1" aria-pressed="false">1×</button>
+              <button type="button" value="2" aria-pressed="true">2×</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Format</label>
+            <div class="segmented" id="format" role="group" aria-label="Format">
+              <button type="button" value="webp" aria-pressed="true">WebP</button>
+              <button type="button" value="png" aria-pressed="false">PNG</button>
+              <button type="button" value="jpeg" aria-pressed="false">JPEG</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button class="primary" type="submit" id="render">Render image <kbd id="shortcut">Ctrl ↵</kbd></button>
+      </div>
+    </form>
+
+    <section class="stage" aria-live="polite">
+      <div class="canvas is-sample" id="canvas">
+        <span class="badge" id="badge">Example</span>
+        <img id="output" alt="">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="error" id="error" hidden></div>
+
+      <div class="meta">
+        <span class="stats" id="stats">The example uses the template's sample content. Render to see yours.</span>
+        <span class="buttons">
+          <a class="secondary" id="download" hidden>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13h10"/></svg>
+            Download
+          </a>
+        </span>
+      </div>
+
+      <div class="request">
+        <span class="method">GET</span>
+        <code id="url"></code>
+        <button type="button" id="copy">Copy</button>
+      </div>
+      <p class="explainer">Every image is a URL. Put it in your <code>og:image</code> tag, or change the query to get a different image.</p>
+    </section>
+  </main>
+
+  <footer>
+    <span id="operator" hidden>Provided by <a id="operatorLink"></a></span>
+    <span>Open source, <a class="repo-link" data-path="" href="https://github.com/synapsmedia/shareshot">on GitHub</a></span>
+    <span class="version" id="version"></span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

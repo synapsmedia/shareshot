@@ -1,0 +1,26 @@
+services:
+  shareshot:
+    build:
+      context: .
+    user: root
+    working_dir: /app
+    volumes:
+      - ./src:/app/src
+      - ./templates:/app/templates
+      - ./styles:/app/styles
+      - ./public:/app/public
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+      - node_modules:/app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+    command: sh -c "npm install && npm run dev"
+    restart: unless-stopped
+
+volumes:
+  node_modules:

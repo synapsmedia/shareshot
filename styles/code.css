@@ -1,0 +1,103 @@
+@import url('https://fonts.bunny.net/css?family=inter:500,600,700|jetbrains-mono:400,500&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 1rem is about 1% of the width, less on wide banners, so one layout fits
+   every size from 1200×630 to a 1080×1920 story. */
+html { font-size: min(1vw, 1.6vh); }
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  --on-accent: oklch(from var(--accent) clamp(0, (0.72 - l) * 100, 1) 0 0);
+}
+
+img { display: block; }
+
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 3);
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(140deg, var(--accent), oklch(from var(--accent) calc(l * 0.45) c calc(h + 40)));
+}
+
+main {
+  height: 100%;
+  padding: 5.6rem 8rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3.2rem;
+}
+
+.window {
+  min-height: 0;
+  border-radius: 2rem;
+  overflow: hidden;
+  background: #0D1117;
+  box-shadow: 0 3rem 8rem rgb(0 0 0 / 0.4), 0 0 0 0.1rem rgb(255 255 255 / 0.1);
+}
+
+figcaption {
+  display: flex;
+  align-items: center;
+  gap: 2.4rem;
+  padding: 1.8rem 2.6rem;
+  background: #161B22;
+  color: #8B949E;
+  font-size: 2rem;
+}
+
+.dots { display: flex; gap: 1rem; }
+.dots i { width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #FF5F57; }
+.dots i:nth-child(2) { background: #FEBC2E; }
+.dots i:nth-child(3) { background: #28C840; }
+
+.title { color: #E6EDF3; font-weight: 600; }
+
+.language {
+  margin-left: auto;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+pre {
+  padding: 3rem 3.6rem 3.6rem;
+  overflow: hidden;
+  color: #E6EDF3;
+  font: 400 2.5rem/1.6 'JetBrains Mono', ui-monospace, monospace;
+  tab-size: 2;
+}
+
+/* highlight.js tokens, in the colours of GitHub's dark theme */
+.hljs-keyword, .hljs-meta .hljs-keyword, .hljs-template-tag, .hljs-type { color: #FF7B72; }
+.hljs-string, .hljs-regexp, .hljs-meta .hljs-string { color: #A5D6FF; }
+.hljs-number, .hljs-literal, .hljs-attr, .hljs-attribute, .hljs-variable, .hljs-selector-class, .hljs-selector-id { color: #79C0FF; }
+.hljs-title, .hljs-title.function_, .hljs-title.class_, .hljs-section { color: #D2A8FF; }
+.hljs-built_in, .hljs-symbol, .hljs-params { color: #FFA657; }
+.hljs-name, .hljs-tag, .hljs-selector-tag, .hljs-quote { color: #7EE787; }
+.hljs-comment, .hljs-meta { color: #8B949E; font-style: italic; }
+.hljs-deletion { color: #FFA198; }
+.hljs-addition { color: #AFF5B4; }
+
+.site { display: flex; align-items: center; gap: 1.4rem; color: #FFFFFF; }
+
+.logo { width: 4.4rem; height: 4.4rem; border-radius: 1rem; object-fit: cover; }
+
+.site-name { font-size: 2.4rem; font-weight: 700; text-shadow: 0 0.2rem 1rem rgb(0 0 0 / 0.25); }
+
+@media (orientation: portrait) {
+  main { padding: 8rem 6rem; gap: 4rem; }
+  figcaption { font-size: 2.6rem; }
+  pre { padding: 3.6rem; font-size: 3rem; white-space: pre-wrap; word-break: break-word; }
+  .logo { width: 6rem; height: 6rem; }
+  .site-name { font-size: 3rem; }
+}

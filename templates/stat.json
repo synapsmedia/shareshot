@@ -1,0 +1,12 @@
+{
+  "title": "Stat",
+  "description": "One big number and what it counts, for milestones",
+  "fields": {
+    "title": "One year of our newsletter",
+    "value": "12,400",
+    "label": "readers get every issue",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#15803D"
+  }
+}

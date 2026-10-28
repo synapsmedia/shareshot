@@ -1,0 +1,146 @@
+@import url('https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 1rem is about 1% of the width, less on wide banners, so one layout fits
+   every size from 1200×630 to a 1080×1920 story. */
+html { font-size: min(1vw, 1.6vh); }
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  --on-accent: oklch(from var(--accent) clamp(0, (0.72 - l) * 100, 1) 0 0);
+}
+
+img { display: block; }
+
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 3);
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #12141A;
+  background: #F5F6F8;
+  --accent-dark: oklch(from var(--accent) min(l, 0.5) c h);
+}
+
+main {
+  height: 100%;
+  padding: 6.4rem;
+  display: flex;
+  gap: 6.4rem;
+}
+
+.when {
+  flex: none;
+  width: 30rem;
+  border-radius: 3.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 2rem 5rem color-mix(in oklch, var(--accent) 35%, transparent);
+}
+
+.month {
+  font-size: 3.4rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.day {
+  font-size: 17rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.weekday { opacity: 0.85; font-size: 2.6rem; font-weight: 500; }
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 3rem;
+}
+
+.content { margin-block: auto; }
+
+.tag {
+  margin-bottom: 2rem;
+  color: var(--accent-dark);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: 5.8rem;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.description {
+  --lines: 2;
+  margin-top: 2rem;
+  color: #555B66;
+  font-size: 2.5rem;
+  line-height: 1.45;
+}
+
+.details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem 3.6rem;
+  margin-top: 3rem;
+  list-style: none;
+  font-size: 2.6rem;
+  font-weight: 600;
+}
+
+.details li { display: flex; align-items: center; gap: 1.2rem; }
+
+.details svg {
+  width: 3rem;
+  height: 3rem;
+  fill: none;
+  stroke: var(--accent-dark);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.site { display: flex; align-items: center; gap: 1.4rem; }
+
+.logo { width: 4.4rem; height: 4.4rem; border-radius: 1rem; object-fit: cover; }
+
+.site-name { font-size: 2.2rem; font-weight: 700; }
+
+@media (orientation: portrait) {
+  main { flex-direction: column; padding: 8rem; gap: 6rem; }
+  .when { width: auto; flex-direction: row; align-items: baseline; justify-content: flex-start; gap: 2.4rem; padding: 4rem 5rem; }
+  .day { order: -1; font-size: 14rem; }
+  .month { font-size: 4.4rem; }
+  .weekday { font-size: 3.4rem; }
+  .tag { font-size: 2.6rem; }
+  h1 { --lines: 4; font-size: 8rem; }
+  .description { --lines: 3; font-size: 3.4rem; }
+  .details { font-size: 3.4rem; }
+  .details svg { width: 4rem; height: 4rem; }
+  .logo { width: 6rem; height: 6rem; }
+  .site-name { font-size: 3rem; }
+}

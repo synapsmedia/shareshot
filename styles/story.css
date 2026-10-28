@@ -1,0 +1,120 @@
+@import url('https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 1rem is about 1% of the width, less on wide banners, so one layout fits
+   every size from 1200×630 to a 1080×1920 story. */
+html { font-size: min(1vw, 1.6vh); }
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  --on-accent: oklch(from var(--accent) clamp(0, (0.72 - l) * 100, 1) 0 0);
+}
+
+img { display: block; }
+
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 3);
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #F5F5F4;
+  background:
+    radial-gradient(90rem 60rem at 50% 100%, color-mix(in oklch, var(--accent) 26%, transparent), transparent 70%),
+    #111214;
+  --accent-light: oklch(from var(--accent) max(l, 0.72) c h);
+}
+
+main {
+  height: 100%;
+  padding: 7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 5rem;
+}
+
+.site {
+  display: flex;
+  align-items: center;
+  gap: 1.8rem;
+}
+
+.logo { width: 6.4rem; height: 6.4rem; border-radius: 1.6rem; object-fit: cover; }
+
+.site-name { font-size: 3rem; font-weight: 700; }
+
+.media {
+  flex: 1 1 0;
+  min-height: 0;
+  border-radius: 3.2rem;
+  overflow: hidden;
+}
+
+.media img { width: 100%; height: 100%; object-fit: cover; }
+
+main:not(:has(.media)) .content { margin-block: auto; }
+
+.tag {
+  margin-bottom: 2.6rem;
+  color: var(--accent-light);
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  --lines: 5;
+  font-size: 8.4rem;
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.description {
+  margin-top: 3rem;
+  color: #B3B5BA;
+  font-size: 3.4rem;
+  line-height: 1.4;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.6rem;
+  padding: 2.2rem 3.6rem;
+  border-radius: 10rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.cta::after { content: '→'; }
+
+@media (orientation: landscape) {
+  main {
+    display: grid;
+    grid-template-columns: 1fr 44%;
+    grid-template-rows: auto 1fr auto;
+    column-gap: 6rem;
+    row-gap: 3rem;
+    padding: 6rem;
+  }
+  .media { grid-column: 2; grid-row: 1 / -1; border-radius: 2.4rem; }
+  .content { align-self: center; }
+  main:not(:has(.media)) { grid-template-columns: 1fr; }
+  .logo { width: 4.8rem; height: 4.8rem; border-radius: 1.2rem; }
+  .site-name { font-size: 2.4rem; }
+  .tag { font-size: 1.9rem; margin-bottom: 2rem; }
+  h1 { --lines: 4; font-size: 5.2rem; }
+  .description { --lines: 2; margin-top: 2rem; font-size: 2.4rem; }
+  .cta { padding: 1.4rem 2.6rem; font-size: 2.2rem; }
+}

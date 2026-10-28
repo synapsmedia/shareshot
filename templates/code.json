@@ -1,0 +1,12 @@
+{
+  "title": "Code",
+  "description": "A highlighted code snippet in a window, for developer posts",
+  "fields": {
+    "title": "slugify.js",
+    "language": "javascript",
+    "code": "export function slugify(title) {\n  return title\n    .normalize('NFKD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase()\n    .replace(/[^a-z0-9]+/g, '-')\n    .replace(/^-|-$/g, '');\n}",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#0EA5E9"
+  }
+}

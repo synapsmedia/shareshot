@@ -1,0 +1,11 @@
+{
+  "title": "Quote",
+  "description": "A pull quote with its author; falls back to the description",
+  "fields": {
+    "quote": "Write for one reader you respect, and the rest will find you.",
+    "author": "Ada Lindqvist",
+    "authorImage": "",
+    "siteName": "Synaps Media",
+    "accent": "#B45309"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Event",
+  "description": "A date block with the event's title, time and place, for webinars and meetups",
+  "fields": {
+    "eventDate": "2026-11-14",
+    "time": "18:00 CET",
+    "location": "Online",
+    "tag": "Live workshop",
+    "title": "Building a paid newsletter from zero",
+    "description": "A hands-on hour with three independent publishers, and your questions.",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#2563EB"
+  }
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{title}}</title>
+  <style>:root { --accent: {{cssColor accent "#6366F1"}}; }</style>
+  {{{styleTag}}}
+</head>
+<body>
+  <main>
+    <div class="content">
+      {{#if tag}}<p class="tag">{{tag}}</p>{{/if}}
+      <h1 class="clamp">{{title}}</h1>
+      {{#if description}}<p class="description clamp">{{description}}</p>{{/if}}
+    </div>
+    <footer>
+      {{#if author}}
+      <div class="byline">
+        <span class="avatar">{{#if authorImage}}<img src="{{authorImage}}" alt="">{{else}}{{author.[0]}}{{/if}}</span>
+        <span class="author">{{author}}</span>
+        {{#if date}}<span class="date">{{date}}</span>{{/if}}
+      </div>
+      {{else if date}}
+      <span class="date">{{date}}</span>
+      {{/if}}
+      <div class="site">{{#if logo}}<img class="logo" src="{{logo}}" alt="">{{/if}}{{#if siteName}}<span class="site-name">{{siteName}}</span>{{/if}}</div>
+    </footer>
+  </main>
+</body>
+</html>

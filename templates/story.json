@@ -1,0 +1,17 @@
+{
+  "title": "Story",
+  "description": "Made for 1080×1920 stories: image, headline and a Read on line",
+  "width": 1080,
+  "height": 1920,
+  "fields": {
+    "image": "https://cdn.synaps.media/synapsmedia/content/images/size/w1200/2026/09/synaps-media-protected-api-keys.jpg",
+    "tag": "Security",
+    "title": "Who holds the keys to your publication?",
+    "description": "A short guide to sharing API access without sharing control.",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "domain": "synapsmedia.com",
+    "callToAction": "",
+    "accent": "#E8572A"
+  }
+}

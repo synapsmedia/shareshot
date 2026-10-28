@@ -1,0 +1,15 @@
+{
+  "title": "Feature",
+  "description": "Headline and byline over a full-bleed image",
+  "fields": {
+    "image": "https://cdn.synaps.media/synapsmedia/content/images/size/w1200/2026/09/synaps-media-protected-api-keys.jpg",
+    "tag": "Security",
+    "title": "Who holds the keys to your publication?",
+    "author": "Ada Lindqvist",
+    "authorImage": "",
+    "date": "Oct 28, 2026",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#E8572A"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "title": "Split",
+  "description": "Image on one half, the story on the other; stacked when upright",
+  "fields": {
+    "image": "https://cdn.synaps.media/synapsmedia/content/images/size/w1200/2026/09/synaps-media-protected-api-keys.jpg",
+    "tag": "Essay",
+    "title": "The quiet economics of independent publishing",
+    "description": "Why a thousand true fans is still the most honest business plan on the internet.",
+    "author": "Ada Lindqvist",
+    "authorImage": "",
+    "date": "Oct 28, 2026",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#C2410C"
+  }
+}

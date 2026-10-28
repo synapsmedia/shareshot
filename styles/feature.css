@@ -1,0 +1,112 @@
+@import url('https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 1rem is about 1% of the width, less on wide banners, so one layout fits
+   every size from 1200×630 to a 1080×1920 story. */
+html { font-size: min(1vw, 1.6vh); }
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  --on-accent: oklch(from var(--accent) clamp(0, (0.72 - l) * 100, 1) 0 0);
+}
+
+img { display: block; }
+
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 3);
+  overflow: hidden;
+}
+
+body {
+  position: relative;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #FFFFFF;
+  background: linear-gradient(150deg, var(--accent), oklch(from var(--accent) calc(l * 0.35) c h));
+}
+
+.photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+main {
+  position: relative;
+  height: 100%;
+  padding: 6.4rem 7rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4rem;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.85), rgb(0 0 0 / 0.5) 45%, rgb(0 0 0 / 0.08) 75%, rgb(0 0 0 / 0.3));
+}
+
+.site, .byline {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+}
+
+.logo { width: 5rem; height: 5rem; border-radius: 1.2rem; object-fit: cover; }
+
+.site-name { font-size: 2.6rem; font-weight: 700; text-shadow: 0 0.2rem 1.2rem rgb(0 0 0 / 0.4); }
+
+.tag {
+  display: inline-block;
+  margin-bottom: 2.6rem;
+  padding: 0.9rem 1.8rem;
+  border-radius: 0.8rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+h1 {
+  max-width: 100rem;
+  font-size: 7rem;
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  text-shadow: 0 0.2rem 2.4rem rgb(0 0 0 / 0.35);
+}
+
+footer { margin-top: 3.2rem; }
+
+.avatar {
+  flex: none;
+  width: 5.6rem;
+  height: 5.6rem;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: rgb(255 255 255 / 0.2);
+  box-shadow: 0 0 0 0.3rem rgb(255 255 255 / 0.35);
+  font-size: 2.4rem;
+  font-weight: 700;
+}
+
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.author { font-size: 2.4rem; font-weight: 600; }
+
+.date { opacity: 0.8; font-size: 2.2rem; }
+.author + .date::before { content: '·'; margin-right: 1.6rem; }
+
+@media (orientation: portrait) {
+  main { padding: 8rem; }
+  h1 { --lines: 6; font-size: 8.8rem; }
+  .site-name, .author { font-size: 3rem; }
+  .date { font-size: 2.8rem; }
+}

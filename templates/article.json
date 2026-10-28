@@ -1,0 +1,15 @@
+{
+  "title": "Article",
+  "description": "Tag, headline and summary on a dark card, with the byline and site",
+  "fields": {
+    "tag": "Product",
+    "title": "What we learned shipping our first public API",
+    "description": "Rate limits, versioning and the docs nobody reads until something breaks.",
+    "author": "Ada Lindqvist",
+    "authorImage": "",
+    "date": "Oct 28, 2026",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#6366F1"
+  }
+}

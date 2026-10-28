@@ -1,0 +1,13 @@
+{
+  "title": "Podcast",
+  "description": "Cover art, episode number and title, with a waveform",
+  "fields": {
+    "image": "https://cdn.synaps.media/synapsmedia/content/images/size/w1200/2026/09/synaps-media-protected-api-keys.jpg",
+    "siteName": "The Field Notes Podcast",
+    "episode": "Episode 42",
+    "title": "Why slow media is winning",
+    "author": "Ada Lindqvist",
+    "duration": "48 min",
+    "accent": "#A855F7"
+  }
+}
