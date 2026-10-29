@@ -1,5 +1,7 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs/promises');
+const crypto = require('crypto');
 const { registerHelpers } = require('./core/handlebars');
 const { renderTemplate, listTemplates, templateDirs, addSourceTemplateDir } = require('./core/templates');
 const { renderImage, parseRenderOptions, getPage } = require('./core/render');
@@ -59,6 +61,35 @@ function timeUntil(time) {
   return `${amount} ${unit}${amount === 1 ? '' : 's'}`;
 }
 
+const PUBLIC_DIR = path.join(__dirname, '../public');
+
+/** The playground's own files that index.html links to, like style.css. */
+const PUBLIC_FILE = /((?:href|src)=")([\w.-]+\.(?:css|js|svg|png|ico|webmanifest))"/g;
+
+/** file → { mtimeMs, hash }, so a file is hashed again only once it changes */
+const fileHashes = new Map();
+
+async function fileHash(file) {
+  const { mtimeMs } = await fs.stat(file);
+  const known = fileHashes.get(file);
+  if (known?.mtimeMs === mtimeMs) return known.hash;
+  const hash = crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex').slice(0, 12);
+  fileHashes.set(file, { mtimeMs, hash });
+  return hash;
+}
+
+/**
+ * index.html with `?v=` and a hash of each file it links to, so a CDN can keep
+ * those for good and a new release is fetched under a new URL.
+ */
+async function playgroundPage() {
+  const html = await fs.readFile(path.join(PUBLIC_DIR, 'index.html'), 'utf-8');
+  const files = [...new Set([...html.matchAll(PUBLIC_FILE)].map(([, , file]) => file))];
+  const hashes = Object.fromEntries(await Promise.all(files.map(async file =>
+    [file, await fileHash(path.join(PUBLIC_DIR, file)).catch(() => null)])));
+  return html.replace(PUBLIC_FILE, (link, start, file) => (hashes[file] ? `${start}${file}?v=${hashes[file]}"` : link));
+}
+
 /** How long a source's answer is reused, so a live preview doesn't fetch the site on every change. */
 const SOURCE_CACHE_MS = 60 * 1000;
 const SOURCE_CACHE_ENTRIES = 500;
@@ -73,6 +104,13 @@ const SOURCE_CACHE_ENTRIES = 500;
 function createApp({ sources = builtInSources, signingKey } = {}) {
   const app = express();
   app.set('trust proxy', trustProxySetting(TRUST_PROXY));
+
+  // Nothing is cached unless a route says so: pages and API answers change
+  // with each release, and a CDN would keep serving the old ones
+  app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+  });
 
   const envKeys = keysFromEnv(SIGNING_KEYS);
   const lookUpKey = signingKey ?? (async kid => envKeys.get(kid) ?? null);
@@ -179,11 +217,26 @@ function createApp({ sources = builtInSources, signingKey } = {}) {
     return { ...known, ...variables };
   }
 
-  app.use(express.static(path.join(__dirname, '../public')));
+  app.get(['/', '/index.html'], async (req, res) => {
+    res.type('html').send(await playgroundPage());
+  });
+  app.use(express.static(PUBLIC_DIR, {
+    index: false,
+    cacheControl: false,
+    // Linked with a hash of their contents, so they never change under that URL
+    setHeaders: res => {
+      if (res.req.query.v) res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    },
+  }));
   for (const dir of templateDirs()) {
-    // The playground's live preview is a sandboxed frame, a different origin, so fonts need CORS
     app.use('/template-assets', express.static(path.join(dir, 'assets'), {
-      setHeaders: res => res.set('Access-Control-Allow-Origin', '*'),
+      cacheControl: false,
+      setHeaders: res => {
+        // The playground's live preview is a sandboxed frame, a different origin, so fonts need CORS
+        res.set('Access-Control-Allow-Origin', '*');
+        // Templates link these without a version, so not for long
+        res.set('Cache-Control', 'public, max-age=3600');
+      },
     }));
   }
 
@@ -198,7 +251,6 @@ function createApp({ sources = builtInSources, signingKey } = {}) {
 
   app.get('/template/:template', guardPage, async (req, res) => {
     const html = await renderTemplate(req.params.template, await templateContext(req.query), `${req.protocol}://${req.get('host')}`);
-    res.set('Cache-Control', cacheMaxAge > 0 ? `public, max-age=${cacheMaxAge}` : 'no-store');
     sendPage(res, html);
   });
 
@@ -249,10 +301,8 @@ function createApp({ sources = builtInSources, signingKey } = {}) {
     res.json({ status: 'ok' });
   });
 
-  // What the caller's address has left of each limit. Never cached: a CDN
-  // would otherwise answer one visitor with another's numbers.
+  // What the caller's address has left of each limit
   app.get('/limits', (req, res) => {
-    res.set('Cache-Control', 'no-store');
     res.json({
       signatureRequired: requireSignature,
       rateLimits: { images: imageLimits?.peek(req.ip) ?? [], previews: pageLimits?.peek(req.ip) ?? [] },

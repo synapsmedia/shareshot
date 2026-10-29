@@ -1,6 +1,6 @@
 {
   "name": "shareshot",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Open Graph and social media images from HTML templates, with data from sources such as Ghost",
   "main": "src/app.js",
   "license": "MIT",

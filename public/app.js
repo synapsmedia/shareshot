@@ -73,6 +73,11 @@ function selectSource(source) {
 
 // Templates: every one works with every source
 
+// With the server's version, so a CDN's copy from an older release isn't used
+function thumbnailUrl(name) {
+  return `/preview/${encodeURIComponent(name)}?v=${state.version}`;
+}
+
 function renderGallery() {
   $('gallery').replaceChildren(...state.templates.map(t => element('button', {
     type: 'button',
@@ -81,7 +86,7 @@ function renderGallery() {
     title: t.description ?? '',
   }, [
     element('span', { className: 'thumb' }, [
-      element('img', { src: `/preview/${encodeURIComponent(t.name)}`, alt: '', loading: 'lazy' }),
+      element('img', { src: thumbnailUrl(t.name), alt: '', loading: 'lazy' }),
     ]),
     element('span', { className: 'name', textContent: t.title ?? humanize(t.name) }),
   ])));
@@ -331,7 +336,7 @@ function showMode(mode) {
   } else if (mode === 'sample') {
     const { width = 1200, height = 630 } = state.template;
     $('canvas').style.setProperty('--ratio', width / height);
-    $('output').src = `/preview/${encodeURIComponent(state.template.name)}`;
+    $('output').src = thumbnailUrl(state.template.name);
     $('stats').textContent = 'The example uses sample content. Enter your site to see it with yours.';
   } else {
     fitFrames();
@@ -564,6 +569,7 @@ async function start() {
 
   state.templates = templates;
   state.sources = sources;
+  state.version = info.version;
 
   for (const link of document.querySelectorAll('.repo-link')) {
     link.href = info.repository + link.dataset.path;

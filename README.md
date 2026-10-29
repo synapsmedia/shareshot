@@ -54,7 +54,7 @@ GET /image/{template}?width&height&dpr&format&source&…
 
 Every other parameter is passed to the template as a variable, except the source's own parameters. A variable in the query wins over the source's.
 
-The same URL gives the same image, so it is sent with `Cache-Control: public, max-age=86400` (see `CACHE_MAX_AGE`), and a CDN in front can answer repeats.
+The same URL gives the same image, so it is sent with `Cache-Control: public, max-age=86400` (see `CACHE_MAX_AGE`), and a CDN in front can answer repeats. Nothing else is kept that long. Template pages and API answers are sent with `no-store`, so a CDN never serves them from an older release. The playground links its own files with a hash of their contents, `app.js?v=…`, and those may be kept for a year. Thumbnails and template assets may be kept for an hour.
 
 ### Preview a template
 
