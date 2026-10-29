@@ -2,6 +2,8 @@
 
 Open Graph and social media images (link previews, posts, stories) rendered on the fly from HTML templates.
 
+<img width="1344" height="889" alt="image" src="https://github.com/user-attachments/assets/ef8b0298-8240-4f1f-9458-b0fadf19a165" />
+
 A template is a Handlebars page with its CSS and assets. Shareshot fills it with the request's variables, renders it in Chromium and returns a WebP, PNG or JPEG of any size. **Sources** fill a template from somewhere else: `?source=ghost` fetches a Ghost site and one of its posts, so any template can show the post's title, author and feature image.
 
 ## Features
