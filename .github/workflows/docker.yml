@@ -18,7 +18,29 @@ env:
   IMAGE_NAME: synapsmedia/shareshot
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+        env:
+          # The tests don't start a browser
+          PUPPETEER_SKIP_DOWNLOAD: "true"
+
+      - name: Test
+        run: npm test
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read

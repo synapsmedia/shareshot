@@ -6,6 +6,8 @@ const { renderImage, parseRenderOptions, getPage } = require('./core/render');
 const { fetchPublic } = require('./core/network');
 const { selfOrigin } = require('./core/server');
 const { HttpError } = require('./core/errors');
+const { checkSignature, keysFromEnv, signUrl } = require('./core/signing');
+const { createRateLimit } = require('./core/rate-limit');
 const { initBrowser, closeBrowser } = require('./core/browser');
 const builtInSources = require('./sources');
 const { version } = require('../package.json');
@@ -15,8 +17,16 @@ const REPOSITORY_URL = 'https://github.com/synapsmedia/shareshot';
 /** Who runs this instance, credited in the playground's footer. */
 const { OPERATOR_NAME, OPERATOR_URL } = process.env;
 
+const {
+  RATE_LIMIT_PER_HOUR = '0',
+  REQUIRE_SIGNATURE,
+  SIGNING_KEYS,
+  TRUST_PROXY = '',
+  CACHE_MAX_AGE = '86400',
+} = process.env;
+
 /** Query parameters for the renderer itself, never passed to templates. */
-const RENDER_PARAMS = ['width', 'height', 'dpr', 'format', 'source'];
+const RENDER_PARAMS = ['width', 'height', 'dpr', 'format', 'source', 'kid', 'sig'];
 
 /**
  * Rendered pages may run only the scripts a template ships in its assets/.
@@ -29,12 +39,58 @@ function sendPage(res, html) {
   res.set('Content-Security-Policy', PAGE_POLICY).type('html').send(html);
 }
 
+/** TRUST_PROXY as Express's `trust proxy`: a hop count, `true`, or addresses and subnets. */
+function trustProxySetting(value) {
+  if (!value || value === 'false') return false;
+  if (value === 'true') return true;
+  if (/^\d+$/.test(value)) return Number(value);
+  return value.split(',').map(entry => entry.trim());
+}
+
+function minutesUntil(time) {
+  return Math.max(1, Math.ceil((time - Date.now()) / 60000));
+}
+
 /**
  * The HTTP app. `sources` replaces the built-in ones, so a deployment can add
- * its own (`{ ...sources, mine }`) or leave some out.
+ * its own (`{ ...sources, mine }`) or leave some out. `signingKey(kid)`
+ * resolves to the secret for a signed URL's `kid`, or null; it defaults to
+ * the keys in SIGNING_KEYS, and a deployment can pass its own, e.g. to look
+ * keys up per customer.
  */
-function createApp({ sources = builtInSources } = {}) {
+function createApp({ sources = builtInSources, signingKey } = {}) {
   const app = express();
+  app.set('trust proxy', trustProxySetting(TRUST_PROXY));
+
+  const envKeys = keysFromEnv(SIGNING_KEYS);
+  const lookUpKey = signingKey ?? (async kid => envKeys.get(kid) ?? null);
+  const requireSignature = REQUIRE_SIGNATURE === '1';
+  const rateLimit = Number(RATE_LIMIT_PER_HOUR) > 0
+    ? createRateLimit({ limit: Number(RATE_LIMIT_PER_HOUR), windowMs: 60 * 60 * 1000 })
+    : null;
+  const cacheMaxAge = Number(CACHE_MAX_AGE) || 0;
+
+  /**
+   * In front of every render: a signed URL is let through, a badly signed one
+   * refused; an unsigned one is refused under REQUIRE_SIGNATURE=1, and
+   * otherwise counts towards the address's RATE_LIMIT_PER_HOUR.
+   */
+  async function guardRender(req, res, next) {
+    const signature = await checkSignature(req.originalUrl, lookUpKey);
+    if (signature === 'valid') return next();
+    if (signature === 'invalid') throw new HttpError(403, 'The signature (sig and kid) is not valid');
+    if (requireSignature) throw new HttpError(401, 'This server only renders signed URLs');
+
+    if (rateLimit) {
+      const { allowed, resetAt } = rateLimit.take(req.ip);
+      if (!allowed) {
+        res.set('Retry-After', String(Math.ceil((resetAt - Date.now()) / 1000)));
+        const minutes = minutesUntil(resetAt);
+        throw new HttpError(429, `That's ${rateLimit.limit} images this hour, the most this server makes for one address. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`);
+      }
+    }
+    next();
+  }
 
   registerHelpers();
   for (const source of Object.values(sources)) {
@@ -72,13 +128,16 @@ function createApp({ sources = builtInSources } = {}) {
     app.use('/template-assets', express.static(path.join(dir, 'assets')));
   }
 
-  app.get('/image/:template', async (req, res) => {
+  app.get('/image/:template', guardRender, async (req, res) => {
     const options = parseRenderOptions(req.query);
     const html = await renderTemplate(req.params.template, await templateContext(req.query), selfOrigin);
-    res.type(options.format).send(await renderImage(html, options));
+    const image = await renderImage(html, options);
+    // The same URL gives the same image, so CDNs and browsers may keep it
+    res.set('Cache-Control', cacheMaxAge > 0 ? `public, max-age=${cacheMaxAge}` : 'no-store');
+    res.type(options.format).send(image);
   });
 
-  app.get('/template/:template', async (req, res) => {
+  app.get('/template/:template', guardRender, async (req, res) => {
     const html = await renderTemplate(req.params.template, await templateContext(req.query), `${req.protocol}://${req.get('host')}`);
     sendPage(res, html);
   });
@@ -130,7 +189,16 @@ function createApp({ sources = builtInSources } = {}) {
     res.json({ status: 'ok' });
   });
 
+  // What the caller's address has left of RATE_LIMIT_PER_HOUR. Never cached:
+  // a CDN would otherwise answer one visitor with another's numbers.
+  app.get('/limits', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    const limit = rateLimit && { perHour: rateLimit.limit, ...rateLimit.peek(req.ip) };
+    res.json({ signatureRequired: requireSignature, rateLimit: limit || null });
+  });
+
   app.use((error, req, res, next) => { // eslint-disable-line no-unused-vars
+    res.set('Cache-Control', 'no-store');
     if (error instanceof HttpError) return res.status(error.status).json({ error: error.message });
     console.error(`${req.method} ${req.path}:`, error);
     res.status(500).json({ error: 'Rendering failed' });
@@ -139,4 +207,4 @@ function createApp({ sources = builtInSources } = {}) {
   return app;
 }
 
-module.exports = { createApp, initBrowser, closeBrowser, sources: builtInSources, HttpError };
+module.exports = { createApp, initBrowser, closeBrowser, sources: builtInSources, HttpError, signUrl };

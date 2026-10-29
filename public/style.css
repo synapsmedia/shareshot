@@ -38,6 +38,9 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Fields scrolled into view (by tabbing, or a script) stop above the sticky Render bar */
+html { scroll-padding-bottom: 120px; }
+
 body {
   background: var(--bg);
   color: var(--text);
@@ -349,6 +352,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: var(--surface);
   border-top: 1px solid var(--border);
   margin-top: -1px;
+}
+
+.allowance {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .primary {

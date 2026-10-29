@@ -14,6 +14,7 @@ A template is a Handlebars page with its CSS and assets. Shareshot fills it with
 - Your own templates, fonts and images, mounted without a fork
 - A Docker image on GitHub Container Registry
 - Can be imported as a library, to add your own sources
+- Signed URLs, and a per-address hourly limit for public instances
 
 ## Quick Start
 
@@ -49,8 +50,11 @@ GET /image/{template}?width&height&dpr&format&source&…
 | `dpr` | `2` | Device pixel ratio, 0.5 to 3; the image is `width × dpr` pixels wide |
 | `format` | `webp` | `webp`, `png` or `jpeg` |
 | `source` | none | A [source](#sources) that fills the template |
+| `kid`, `sig` | none | A [signature](#signed-urls) |
 
 Every other parameter is passed to the template as a variable, except the source's own parameters. A variable in the query wins over the source's.
+
+The same URL gives the same image, so it is sent with `Cache-Control: public, max-age=86400` (see `CACHE_MAX_AGE`), and a CDN in front can answer repeats.
 
 ### Preview a template
 
@@ -76,9 +80,9 @@ GET /sources
 GET /health
 ```
 
-Answers `{"status":"ok"}`. `GET /info` answers the version, the repository and the [operator](#configuration).
+Answers `{"status":"ok"}`. `GET /info` answers the version, the repository and the [operator](#configuration). `GET /limits` answers whether signatures are required and, with `RATE_LIMIT_PER_HOUR`, what the caller's address has left: `{"signatureRequired":false,"rateLimit":{"perHour":5,"remaining":4,"resetAt":1793237019270}}`.
 
-Errors come back as JSON, `{"error": "…"}`: 400 for a bad parameter, 404 for an unknown template or post, 502 when a source's site fails.
+Errors come back as JSON, `{"error": "…"}`: 400 for a bad parameter, 401 for an unsigned URL when signatures are required, 403 for a bad signature, 404 for an unknown template or post, 429 when the address has used up its hourly limit (with `Retry-After`), 502 when a source's site fails, 504 when a render takes longer than 20 seconds.
 
 ## Sources
 
@@ -158,7 +162,7 @@ initBrowser().then(() => {
 });
 ```
 
-The app is a plain Express app, so you can add middleware in front of it, such as authentication or rate limits.
+The app is a plain Express app, so you can add middleware in front of it, such as authentication.
 
 ## Templates
 
@@ -231,6 +235,25 @@ Files in `assets/` are served at `/template-assets/`. Images are rendered as pag
 
 An SVG exported from a design tool makes a good template: inline it in the `.hbs` and replace the text that changes with a variable, e.g. `<text …>{{version}}</text>`.
 
+## Signed URLs
+
+A signed URL carries `kid`, naming a key, and `sig`, the HMAC-SHA256 of the URL in hex. Signed URLs skip the hourly limit, and `REQUIRE_SIGNATURE=1` makes them the only ones the server renders. The keys are `SIGNING_KEYS`, `kid:secret` pairs separated by commas, so a key can be rotated by adding a new one before removing the old.
+
+The signed text is the path, `?`, and the query parameters except `sig`, sorted by name and then value, each name and value percent-encoded as JavaScript's `encodeURIComponent` does, joined with `&`. For `/image/article?title=Hello&kid=main`, that is `/image/article?kid=main&title=Hello`. In Node.js:
+
+```js
+const { signUrl } = require('shareshot');
+
+signUrl('https://img.example.com/image/article?title=Hello', { kid: 'main', secret: process.env.SHARESHOT_SECRET });
+// → https://img.example.com/image/article?title=Hello&kid=main&sig=4f1c…
+```
+
+To look keys up elsewhere, e.g. one per customer, pass `signingKey` to `createApp`. It resolves to the secret for a `kid`, or `null`:
+
+```js
+createApp({ signingKey: async kid => (await customers.findByKeyId(kid))?.secret ?? null });
+```
+
 ## Configuration
 
 | Variable | Default | Purpose |
@@ -240,10 +263,15 @@ An SVG exported from a design tool makes a good template: inline it in the `.hbs
 | `MAX_CONCURRENT_RENDERS` | `4` | Pages rendered at the same time; further requests wait |
 | `ALLOW_PRIVATE_NETWORKS` | off | `1` lets pages and sources reach private, loopback and link-local addresses |
 | `OPERATOR_NAME`, `OPERATOR_URL` | none | Who runs this instance, credited as "Provided by" in the playground |
+| `RATE_LIMIT_PER_HOUR` | off | Images (and `/template` pages) one address may request per hour, unsigned. Counted in memory, per process. Thumbnails at `/preview` don't count |
+| `TRUST_PROXY` | off | Express's [`trust proxy`](https://expressjs.com/en/guide/behind-proxies.html), so the limit counts the visitor's address behind a proxy: a hop count (`2` behind a CDN and a reverse proxy), `true`, or addresses |
+| `CACHE_MAX_AGE` | `86400` | Seconds browsers and CDNs may keep an image; `0` sends `no-store` |
+| `SIGNING_KEYS` | none | Keys for [signed URLs](#signed-urls), `kid:secret,kid2:secret2` |
+| `REQUIRE_SIGNATURE` | off | `1` renders signed URLs only |
 
 Variables are HTML-escaped with `{{…}}`, so a query parameter can't add markup or scripts. Rendered pages also carry a Content Security Policy that allows only scripts from this server, i.e. those a template ships in its `assets/`. Keep `{{{…}}}` for HTML a template builds itself. The `style` parameter takes a stylesheet name, never a URL.
 
-Template variables end up in the page, and sources fetch the URLs they are given. So rendered pages may only load from public addresses (and from this server), and sources may only fetch public addresses, each redirect checked again. Without that, anyone who can request an image could make the server reach internal URLs.
+Template variables end up in the page, and sources fetch the URLs they are given, so either could make the server reach internal URLs. Instead, the browser loads only the page and its template's assets from this server. The server fetches everything else for it, and for sources: from public addresses only, connecting to the address it checked, so a host name can't resolve differently the second time, and checking each redirect the same way. A page gets images, fonts and stylesheets only, at most 40 of them and 10 MB each, and they are kept in memory for an hour.
 
 ## Docker
 
@@ -271,6 +299,7 @@ This mounts `src/`, `templates/`, `styles/` and `public/` and restarts on change
 ```bash
 npm install
 npm run dev
+npm test
 ```
 
 ## License

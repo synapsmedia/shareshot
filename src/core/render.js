@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { getBrowser } = require('./browser');
-const { isAllowedRequest } = require('./network');
+const { respondWithResource } = require('./resources');
 const { selfOrigin } = require('./server');
 const { HttpError } = require('./errors');
 
@@ -66,12 +66,20 @@ async function screenshotPage(page, token, { width, height, dpr, format }) {
   // Every render is fresh: a cached page would answer 304.
   await page.setCacheEnabled(false);
   await page.setRequestInterception(true);
+  // The page itself and its template's assets come from this server; the
+  // server fetches anything else for it (see resources.js). Nothing else of
+  // this server's: an image URL pointing at /image/… would start a render
+  // inside this one, outside any rate limit.
+  const count = { outside: 0 };
   page.on('request', async request => {
     try {
-      if (await isAllowedRequest(request.url())) {
+      const url = request.url();
+      if (url === `${selfOrigin}/render/${token}` || url.startsWith(`${selfOrigin}/template-assets/`) || /^(data|blob):/i.test(url)) {
         await request.continue();
-      } else {
+      } else if (url.startsWith(`${selfOrigin}/`)) {
         await request.abort('blockedbyclient');
+      } else {
+        await respondWithResource(request, count);
       }
     } catch {
       // The page was closed while the request waited

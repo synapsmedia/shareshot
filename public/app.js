@@ -188,13 +188,16 @@ function fieldControl(field) {
     control.addEventListener('input', onInput);
   }
 
+  // Image fields take a URL; say so, since an example may be left empty
+  const hint = field.hint ?? (/^(image|logo|authorImage)$/.test(field.name) ? 'A public image URL, https://…' : '');
+
   const label = element('label', { htmlFor: id, textContent: field.label });
   if (field.optional) label.append(' ', element('span', { className: 'optional', textContent: 'optional' }));
 
   return element('div', { className: 'field' }, [
     label,
     control,
-    ...(field.hint ? [element('p', { className: 'hint', textContent: field.hint })] : []),
+    ...(hint ? [element('p', { className: 'hint', textContent: hint })] : []),
   ]);
 }
 
@@ -360,6 +363,7 @@ async function render() {
   } finally {
     $('render').disabled = false;
     $('canvas').classList.remove('is-busy');
+    showAllowance();
   }
 }
 
@@ -380,6 +384,18 @@ $('copy').addEventListener('click', async () => {
   $('copy').textContent = 'Copied';
   setTimeout(() => { $('copy').textContent = 'Copy'; }, 1500);
 });
+
+// What this visitor has left of the server's hourly limit, if it has one
+
+async function showAllowance() {
+  const { rateLimit } = await fetch('/limits').then(response => response.json()).catch(() => ({}));
+  if (!rateLimit) return;
+  const minutes = Math.max(1, Math.ceil((rateLimit.resetAt - Date.now()) / 60000));
+  $('allowance').textContent = rateLimit.remaining > 0
+    ? `${rateLimit.remaining} of ${rateLimit.perHour} renders left this hour`
+    : `No renders left; more in ${minutes} min`;
+  $('allowance').hidden = false;
+}
 
 // Start
 
@@ -402,6 +418,7 @@ async function start() {
 
   renderSources();
   renderGallery();
+  showAllowance();
   selectSource('');
   const first = state.templates.find(t => t.name === 'split') ?? state.templates[0];
   if (first) selectTemplate(first.name);

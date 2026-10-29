@@ -1,6 +1,6 @@
 {
   "name": "shareshot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Open Graph and social media images from HTML templates, with data from sources such as Ghost",
   "main": "src/app.js",
   "license": "MIT",
@@ -14,7 +14,8 @@
   "homepage": "https://github.com/synapsmedia/shareshot#readme",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test": "node --test"
   },
   "dependencies": {
     "date-fns": "^3.0.0",
