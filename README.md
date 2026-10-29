@@ -280,7 +280,7 @@ createApp({ signingKey: async kid => (await customers.findByKeyId(kid))?.secret 
 | `RATE_LIMITS` | off | Images one address may request, unsigned, in one or more windows: `10/minute,60/hour,300/day` (`second`, `minute`, `hour` or `day`). Counted in memory, per process. Thumbnails at `/preview` don't count. `RATE_LIMIT_PER_HOUR=60`, from 1.1, still means `60/hour` |
 | `PAGE_RATE_LIMITS` | off | The same for template pages at `/template`, which the live preview loads as someone types, e.g. `600/hour`. They need no browser, so they can be far more generous |
 | `MAX_RENDERS_PER_ADDRESS` | off | Images one address may have in progress at once, unsigned. Someone in the playground waits for their image; a script asks for many at a time |
-| `TRUST_PROXY` | off | Express's [`trust proxy`](https://expressjs.com/en/guide/behind-proxies.html), so the limit counts the visitor's address behind a proxy: a hop count (`2` behind a CDN and a reverse proxy), `true`, or addresses |
+| `TRUST_PROXY` | off | Express's [`trust proxy`](https://expressjs.com/en/guide/behind-proxies.html), so the limit counts the visitor's address behind a proxy, and the playground's link preview gets `https` URLs: a hop count (`2` behind a CDN and a reverse proxy), `true`, or addresses |
 | `CACHE_MAX_AGE` | `86400` | Seconds browsers and CDNs may keep an image; `0` sends `no-store` |
 | `SIGNING_KEYS` | none | Keys for [signed URLs](#signed-urls), `kid:secret,kid2:secret2` |
 | `REQUIRE_SIGNATURE` | off | `1` renders signed URLs only |

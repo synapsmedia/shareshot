@@ -5,7 +5,7 @@ const state = {
   sources: {},
   source: '',         // '' means query variables only
   template: null,
-  values: {},         // field values by template, so switching back keeps edits
+  values: {},         // edited field values by source, kept across templates
   dpr: '2',
   format: 'webp',
   image: null,        // the rendered image, { url, ratio, stats }, until anything changes
@@ -111,7 +111,8 @@ function selectTemplate(name) {
 
 // Fields: the template's variables. With a source, its parameters come
 // first, then the variables it doesn't fill, then the ones it does, to override.
-// Values are kept per source and template, so switching back keeps edits.
+// Edits are kept per source, not per template, so a title typed for one
+// template stays when you try the next; fields left alone show its example.
 
 function templateFields(values, withExamples) {
   return Object.entries(state.template.fields ?? {}).map(([name, example]) => ({
@@ -126,13 +127,13 @@ function templateFields(values, withExamples) {
 
 function fieldGroups() {
   if (!state.source) {
-    return { main: templateFields(state.values[`|${state.template.name}`] ??= {}, true), extra: [], overrides: [] };
+    return { main: templateFields(state.values['|'] ??= {}, true), extra: [], overrides: [] };
   }
 
   const source = state.sources[state.source];
   const sourceValues = state.values[state.source] ??= {};
   const filled = new Set(source.variables ?? []);
-  const fields = templateFields(state.values[`${state.source}|${state.template.name}`] ??= {}, false);
+  const fields = templateFields(state.values[`${state.source}|`] ??= {}, false);
   return {
     main: Object.entries(source.params).map(([name, param]) => ({
       name,

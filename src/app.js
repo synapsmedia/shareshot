@@ -79,15 +79,47 @@ async function fileHash(file) {
 }
 
 /**
- * index.html with `?v=` and a hash of each file it links to, so a CDN can keep
- * those for good and a new release is fetched under a new URL.
+ * The playground's own link preview, made here: the Story template's
+ * thumbnail inside Split. Absolute URLs, since the render fetches them from
+ * outside like any other image. With the version, so a release that changes
+ * the templates is a new image.
  */
-async function playgroundPage() {
+function socialImageTags(origin) {
+  const query = new URLSearchParams({
+    image: `https://images.unsplash.com/photo-1696251503133-d3ccd4aee3e5?q=80&w=600&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D`,
+    logo: `${origin}/icon.svg`,
+    author: 'Synaps Media',
+    authorImage: 'https://www.synapsmedia.com/assets/images/apple-touch-icon.png',
+    siteName: 'Shareshot',
+    tag: 'Ghost Support',
+    date: 'Open Source',
+    title: 'Social images from HTML templates',
+    description: 'Open Graph and story images, rendered on the fly from your own text or a Ghost post.',
+    accent: '#2b59ff',
+    format: 'jpeg',
+  });
+  const image = `${origin}/image/split?${query}`.replaceAll('&', '&amp;');
+  return [
+    `<meta property="og:url" content="${origin}/">`,
+    `<meta property="og:image" content="${image}">`,
+    '<meta property="og:image:width" content="2400">',
+    '<meta property="og:image:height" content="1260">',
+    `<meta name="twitter:image" content="${image}">`,
+  ].join('\n  ');
+}
+
+/**
+ * index.html with `?v=` and a hash of each file it links to, so a CDN can keep
+ * those for good and a new release is fetched under a new URL. With `origin`,
+ * also the link preview's image.
+ */
+async function playgroundPage(origin) {
   const html = await fs.readFile(path.join(PUBLIC_DIR, 'index.html'), 'utf-8');
   const files = [...new Set([...html.matchAll(PUBLIC_FILE)].map(([, , file]) => file))];
   const hashes = Object.fromEntries(await Promise.all(files.map(async file =>
     [file, await fileHash(path.join(PUBLIC_DIR, file)).catch(() => null)])));
-  return html.replace(PUBLIC_FILE, (link, start, file) => (hashes[file] ? `${start}${file}?v=${hashes[file]}"` : link));
+  const page = html.replace(PUBLIC_FILE, (link, start, file) => (hashes[file] ? `${start}${file}?v=${hashes[file]}"` : link));
+  return origin ? page.replace('</head>', `  ${socialImageTags(origin)}\n</head>`) : page;
 }
 
 /** How long a source's answer is reused, so a live preview doesn't fetch the site on every change. */
@@ -218,7 +250,8 @@ function createApp({ sources = builtInSources, signingKey } = {}) {
   }
 
   app.get(['/', '/index.html'], async (req, res) => {
-    res.type('html').send(await playgroundPage());
+    // A server that only renders signed URLs couldn't render the link preview's
+    res.type('html').send(await playgroundPage(requireSignature ? null : `${req.protocol}://${req.get('host')}`));
   });
   app.use(express.static(PUBLIC_DIR, {
     index: false,
