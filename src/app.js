@@ -7,7 +7,7 @@ const { fetchPublic } = require('./core/network');
 const { selfOrigin } = require('./core/server');
 const { HttpError } = require('./core/errors');
 const { checkSignature, keysFromEnv, signUrl } = require('./core/signing');
-const { createRateLimit } = require('./core/rate-limit');
+const { createRateLimits, parseRateLimits } = require('./core/rate-limit');
 const { initBrowser, closeBrowser } = require('./core/browser');
 const builtInSources = require('./sources');
 const { version } = require('../package.json');
@@ -18,7 +18,10 @@ const REPOSITORY_URL = 'https://github.com/synapsmedia/shareshot';
 const { OPERATOR_NAME, OPERATOR_URL } = process.env;
 
 const {
-  RATE_LIMIT_PER_HOUR = '0',
+  RATE_LIMITS,
+  RATE_LIMIT_PER_HOUR,
+  PAGE_RATE_LIMITS = '',
+  MAX_RENDERS_PER_ADDRESS = '0',
   REQUIRE_SIGNATURE,
   SIGNING_KEYS,
   TRUST_PROXY = '',
@@ -47,9 +50,18 @@ function trustProxySetting(value) {
   return value.split(',').map(entry => entry.trim());
 }
 
-function minutesUntil(time) {
-  return Math.max(1, Math.ceil((time - Date.now()) / 60000));
+/** "40 seconds", "12 minutes" or "3 hours" until `time`. */
+function timeUntil(time) {
+  const seconds = Math.max(1, Math.ceil((time - Date.now()) / 1000));
+  const [amount, unit] = seconds < 60 ? [seconds, 'second']
+    : seconds < 2 * 60 * 60 ? [Math.ceil(seconds / 60), 'minute']
+    : [Math.ceil(seconds / 3600), 'hour'];
+  return `${amount} ${unit}${amount === 1 ? '' : 's'}`;
 }
+
+/** How long a source's answer is reused, so a live preview doesn't fetch the site on every change. */
+const SOURCE_CACHE_MS = 60 * 1000;
+const SOURCE_CACHE_ENTRIES = 500;
 
 /**
  * The HTTP app. `sources` replaces the built-in ones, so a deployment can add
@@ -65,31 +77,75 @@ function createApp({ sources = builtInSources, signingKey } = {}) {
   const envKeys = keysFromEnv(SIGNING_KEYS);
   const lookUpKey = signingKey ?? (async kid => envKeys.get(kid) ?? null);
   const requireSignature = REQUIRE_SIGNATURE === '1';
-  const rateLimit = Number(RATE_LIMIT_PER_HOUR) > 0
-    ? createRateLimit({ limit: Number(RATE_LIMIT_PER_HOUR), windowMs: 60 * 60 * 1000 })
-    : null;
+  // RATE_LIMIT_PER_HOUR is how 1.1 said it
+  const imageLimits = createRateLimits(parseRateLimits(RATE_LIMITS
+    ?? (Number(RATE_LIMIT_PER_HOUR) > 0 ? `${Number(RATE_LIMIT_PER_HOUR)}/hour` : '')));
+  const pageLimits = createRateLimits(parseRateLimits(PAGE_RATE_LIMITS));
+  const maxRendersPerAddress = Number(MAX_RENDERS_PER_ADDRESS) || 0;
   const cacheMaxAge = Number(CACHE_MAX_AGE) || 0;
+
+  /** address → images it has in progress */
+  const rendering = new Map();
+
+  /** Counts an image in progress for the address until its response closes. */
+  function holdRender(req, res) {
+    const count = rendering.get(req.ip) ?? 0;
+    if (count >= maxRendersPerAddress) {
+      throw new HttpError(429, `Wait for your ${count === 1 ? 'image' : `${count} images`} in progress before asking for another`, { 'Retry-After': '5' });
+    }
+    rendering.set(req.ip, count + 1);
+    res.on('close', () => {
+      const left = rendering.get(req.ip) - 1;
+      if (left > 0) rendering.set(req.ip, left);
+      else rendering.delete(req.ip);
+    });
+  }
 
   /**
    * In front of every render: a signed URL is let through, a badly signed one
    * refused; an unsigned one is refused under REQUIRE_SIGNATURE=1, and
-   * otherwise counts towards the address's RATE_LIMIT_PER_HOUR.
+   * otherwise counts towards the address's `limits`, as a `noun`. Unsigned
+   * images may also be in progress only MAX_RENDERS_PER_ADDRESS at a time.
    */
-  async function guardRender(req, res, next) {
-    const signature = await checkSignature(req.originalUrl, lookUpKey);
-    if (signature === 'valid') return next();
-    if (signature === 'invalid') throw new HttpError(403, 'The signature (sig and kid) is not valid');
-    if (requireSignature) throw new HttpError(401, 'This server only renders signed URLs');
+  function guard(limits, noun, { image = false } = {}) {
+    return async (req, res, next) => {
+      const signature = await checkSignature(req.originalUrl, lookUpKey);
+      if (signature === 'valid') return next();
+      if (signature === 'invalid') throw new HttpError(403, 'The signature (sig and kid) is not valid');
+      if (requireSignature) throw new HttpError(401, 'This server only renders signed URLs');
 
-    if (rateLimit) {
-      const { allowed, resetAt } = rateLimit.take(req.ip);
-      if (!allowed) {
-        res.set('Retry-After', String(Math.ceil((resetAt - Date.now()) / 1000)));
-        const minutes = minutesUntil(resetAt);
-        throw new HttpError(429, `That's ${rateLimit.limit} images this hour, the most this server makes for one address. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`);
+      // Before counting, so a request turned away here doesn't use up the limit
+      if (image && maxRendersPerAddress) holdRender(req, res);
+      const taken = limits?.take(req.ip);
+      if (taken && !taken.allowed) {
+        const when = taken.per === 'day' ? 'today' : `this ${taken.per}`;
+        throw new HttpError(429, `That's ${taken.limit} ${noun} ${when}, the most this server makes for one address. Try again in ${timeUntil(taken.resetAt)}.`,
+          { 'Retry-After': String(Math.ceil((taken.resetAt - Date.now()) / 1000)) });
       }
+      next();
+    };
+  }
+
+  const guardImage = guard(imageLimits, 'images', { image: true });
+  const guardPage = guard(pageLimits, 'previews');
+
+  /** "source params" → its answer, as a promise, until it expires; oldest first. */
+  const sourceAnswers = new Map();
+
+  function cachedContext(source, sourceName, params) {
+    const key = `${sourceName} ${JSON.stringify(params)}`;
+    const cached = sourceAnswers.get(key);
+    if (cached && cached.expires > Date.now()) return cached.answer;
+
+    sourceAnswers.delete(key);
+    const answer = Promise.resolve().then(() => source.context(params, { fetch: fetchPublic }));
+    sourceAnswers.set(key, { expires: Date.now() + SOURCE_CACHE_MS, answer });
+    answer.catch(() => sourceAnswers.delete(key));
+    for (const [oldest] of sourceAnswers) {
+      if (sourceAnswers.size <= SOURCE_CACHE_ENTRIES) break;
+      sourceAnswers.delete(oldest);
     }
-    next();
+    return answer;
   }
 
   registerHelpers();
@@ -117,7 +173,7 @@ function createApp({ sources = builtInSources, signingKey } = {}) {
       if (value) params[name] = value;
     }
 
-    const filled = await source.context(params, { fetch: fetchPublic });
+    const filled = await cachedContext(source, sourceName, params);
     // A source leaves out what it doesn't have, rather than blanking a query variable
     const known = Object.fromEntries(Object.entries(filled).filter(([, value]) => value !== undefined && value !== null && value !== ''));
     return { ...known, ...variables };
@@ -125,10 +181,13 @@ function createApp({ sources = builtInSources, signingKey } = {}) {
 
   app.use(express.static(path.join(__dirname, '../public')));
   for (const dir of templateDirs()) {
-    app.use('/template-assets', express.static(path.join(dir, 'assets')));
+    // The playground's live preview is a sandboxed frame, a different origin, so fonts need CORS
+    app.use('/template-assets', express.static(path.join(dir, 'assets'), {
+      setHeaders: res => res.set('Access-Control-Allow-Origin', '*'),
+    }));
   }
 
-  app.get('/image/:template', guardRender, async (req, res) => {
+  app.get('/image/:template', guardImage, async (req, res) => {
     const options = parseRenderOptions(req.query);
     const html = await renderTemplate(req.params.template, await templateContext(req.query), selfOrigin);
     const image = await renderImage(html, options);
@@ -137,8 +196,9 @@ function createApp({ sources = builtInSources, signingKey } = {}) {
     res.type(options.format).send(image);
   });
 
-  app.get('/template/:template', guardRender, async (req, res) => {
+  app.get('/template/:template', guardPage, async (req, res) => {
     const html = await renderTemplate(req.params.template, await templateContext(req.query), `${req.protocol}://${req.get('host')}`);
+    res.set('Cache-Control', cacheMaxAge > 0 ? `public, max-age=${cacheMaxAge}` : 'no-store');
     sendPage(res, html);
   });
 
@@ -162,7 +222,7 @@ function createApp({ sources = builtInSources, signingKey } = {}) {
 
       const { width = 1200, height = 630 } = template;
       preview = renderTemplate(name, template.fields ?? {}, selfOrigin)
-        .then(html => renderImage(html, { width, height, dpr: 960 / width, format: 'webp' }));
+        .then(html => renderImage(html, { width, height, dpr: 960 / width, format: 'webp' }, { alwaysWait: true }));
       previews.set(name, preview);
       preview.catch(() => previews.delete(name));
     }
@@ -189,17 +249,20 @@ function createApp({ sources = builtInSources, signingKey } = {}) {
     res.json({ status: 'ok' });
   });
 
-  // What the caller's address has left of RATE_LIMIT_PER_HOUR. Never cached:
-  // a CDN would otherwise answer one visitor with another's numbers.
+  // What the caller's address has left of each limit. Never cached: a CDN
+  // would otherwise answer one visitor with another's numbers.
   app.get('/limits', (req, res) => {
     res.set('Cache-Control', 'no-store');
-    const limit = rateLimit && { perHour: rateLimit.limit, ...rateLimit.peek(req.ip) };
-    res.json({ signatureRequired: requireSignature, rateLimit: limit || null });
+    res.json({
+      signatureRequired: requireSignature,
+      rateLimits: { images: imageLimits?.peek(req.ip) ?? [], previews: pageLimits?.peek(req.ip) ?? [] },
+      rendersPerAddress: maxRendersPerAddress || null,
+    });
   });
 
   app.use((error, req, res, next) => { // eslint-disable-line no-unused-vars
     res.set('Cache-Control', 'no-store');
-    if (error instanceof HttpError) return res.status(error.status).json({ error: error.message });
+    if (error instanceof HttpError) return res.status(error.status).set(error.headers).json({ error: error.message });
     console.error(`${req.method} ${req.path}:`, error);
     res.status(500).json({ error: 'Rendering failed' });
   });

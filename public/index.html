@@ -97,21 +97,29 @@
     </form>
 
     <section class="stage" aria-live="polite">
-      <div class="canvas is-sample" id="canvas">
-        <span class="badge" id="badge">Example</span>
-        <img id="output" alt="">
+      <div class="canvas" id="canvas">
+        <div class="segmented view" id="view" role="group" aria-label="Show">
+          <button type="button" value="preview" aria-pressed="true">Live preview</button>
+          <button type="button" value="image" aria-pressed="false">Rendered image</button>
+        </div>
+        <!-- The template as a page, at the image's size, scaled down to fit; two frames, so a change loads behind the shown one -->
+        <div class="frame" id="frame">
+          <iframe sandbox="allow-scripts" title="Live preview" tabindex="-1"></iframe>
+          <iframe sandbox="allow-scripts" title="Live preview" tabindex="-1" hidden></iframe>
+        </div>
+        <img id="output" alt="" hidden>
         <div class="spinner"></div>
       </div>
 
       <div class="error" id="error" hidden></div>
 
       <div class="meta">
-        <span class="stats" id="stats">The example uses the template's sample content. Render to see yours.</span>
+        <span class="stats" id="stats"></span>
         <span class="buttons">
-          <a class="secondary" id="download" hidden>
+          <button type="button" class="secondary" id="download" title="Render the image and save it">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13h10"/></svg>
             Download
-          </a>
+          </button>
         </span>
       </div>
 
@@ -121,14 +129,14 @@
         <button type="button" id="copy">Copy</button>
       </div>
       <p class="explainer">Every image is a URL. Put it in your <code>og:image</code> tag, or change the query to get a different image.</p>
+
+      <footer>
+        <span id="operator" hidden>Provided by <a id="operatorLink"></a></span>
+        <span>Open source, <a class="repo-link" data-path="" href="https://github.com/synapsmedia/shareshot">on GitHub</a></span>
+        <span class="version" id="version"></span>
+      </footer>
     </section>
   </main>
-
-  <footer>
-    <span id="operator" hidden>Provided by <a id="operatorLink"></a></span>
-    <span>Open source, <a class="repo-link" data-path="" href="https://github.com/synapsmedia/shareshot">on GitHub</a></span>
-    <span class="version" id="version"></span>
-  </footer>
 
   <script src="app.js"></script>
 </body>

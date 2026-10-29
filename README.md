@@ -7,7 +7,7 @@ A template is a Handlebars page with its CSS and assets. Shareshot fills it with
 ## Features
 
 - WebP, PNG or JPEG from Handlebars templates, at any size and pixel ratio
-- A playground with template thumbnails and the request URL for every image
+- A playground with a live preview as you type, template thumbnails, and the request URL for every image
 - Template previews as HTML
 - Thirteen built-in templates that fit any size, from 1200 × 630 to a 1080 × 1920 story
 - Sources that fill any template; Ghost is built in
@@ -62,7 +62,7 @@ The same URL gives the same image, so it is sent with `Cache-Control: public, ma
 GET /template/{template}?source&…
 ```
 
-The same page as HTML, with the same variables.
+The same page as HTML, with the same variables. The playground shows it as its live preview: in a sandboxed frame at the image's own size, scaled down to fit, so the template lays out as it does for the image. A source's answer is reused for a minute, so a preview that changes as someone types doesn't fetch their site every time.
 
 ### List templates and sources
 
@@ -80,9 +80,20 @@ GET /sources
 GET /health
 ```
 
-Answers `{"status":"ok"}`. `GET /info` answers the version, the repository and the [operator](#configuration). `GET /limits` answers whether signatures are required and, with `RATE_LIMIT_PER_HOUR`, what the caller's address has left: `{"signatureRequired":false,"rateLimit":{"perHour":5,"remaining":4,"resetAt":1793237019270}}`.
+Answers `{"status":"ok"}`. `GET /info` answers the version, the repository and the [operator](#configuration). `GET /limits` answers whether signatures are required and what the caller's address has left of each [limit](#configuration), for images and for template pages:
 
-Errors come back as JSON, `{"error": "…"}`: 400 for a bad parameter, 401 for an unsigned URL when signatures are required, 403 for a bad signature, 404 for an unknown template or post, 429 when the address has used up its hourly limit (with `Retry-After`), 502 when a source's site fails, 504 when a render takes longer than 20 seconds.
+```json
+{
+  "signatureRequired": false,
+  "rateLimits": {
+    "images": [{ "limit": 10, "per": "minute", "remaining": 9, "resetAt": 1793237019270 }],
+    "previews": [{ "limit": 600, "per": "hour", "remaining": 598, "resetAt": 1793240559270 }]
+  },
+  "rendersPerAddress": 2
+}
+```
+
+Errors come back as JSON, `{"error": "…"}`: 400 for a bad parameter, 401 for an unsigned URL when signatures are required, 403 for a bad signature, 404 for an unknown template or post, 429 when the address has used up a limit or has too many images in progress (with `Retry-After`), 502 when a source's site fails, 503 when too many renders are waiting already (with `Retry-After`), 504 when a render takes longer than 20 seconds.
 
 ## Sources
 
@@ -261,9 +272,12 @@ createApp({ signingKey: async kid => (await customers.findByKeyId(kid))?.secret 
 | `PORT` | `3000` | HTTP port |
 | `TEMPLATES_DIR` | none | Extra template directories, comma separated, searched first |
 | `MAX_CONCURRENT_RENDERS` | `4` | Pages rendered at the same time; further requests wait |
+| `MAX_WAITING_RENDERS` | `20` | Requests that may wait for a render; more get 503. Playground thumbnails always wait |
 | `ALLOW_PRIVATE_NETWORKS` | off | `1` lets pages and sources reach private, loopback and link-local addresses |
 | `OPERATOR_NAME`, `OPERATOR_URL` | none | Who runs this instance, credited as "Provided by" in the playground |
-| `RATE_LIMIT_PER_HOUR` | off | Images (and `/template` pages) one address may request per hour, unsigned. Counted in memory, per process. Thumbnails at `/preview` don't count |
+| `RATE_LIMITS` | off | Images one address may request, unsigned, in one or more windows: `10/minute,60/hour,300/day` (`second`, `minute`, `hour` or `day`). Counted in memory, per process. Thumbnails at `/preview` don't count. `RATE_LIMIT_PER_HOUR=60`, from 1.1, still means `60/hour` |
+| `PAGE_RATE_LIMITS` | off | The same for template pages at `/template`, which the live preview loads as someone types, e.g. `600/hour`. They need no browser, so they can be far more generous |
+| `MAX_RENDERS_PER_ADDRESS` | off | Images one address may have in progress at once, unsigned. Someone in the playground waits for their image; a script asks for many at a time |
 | `TRUST_PROXY` | off | Express's [`trust proxy`](https://expressjs.com/en/guide/behind-proxies.html), so the limit counts the visitor's address behind a proxy: a hop count (`2` behind a CDN and a reverse proxy), `true`, or addresses |
 | `CACHE_MAX_AGE` | `86400` | Seconds browsers and CDNs may keep an image; `0` sends `no-store` |
 | `SIGNING_KEYS` | none | Keys for [signed URLs](#signed-urls), `kid:secret,kid2:secret2` |

@@ -8,7 +8,9 @@ const FORMATS = ['webp', 'png', 'jpeg'];
 const MAX_DIMENSION = 4096;
 const MAX_DPR = 3;
 
-const maxConcurrentRenders = Number(process.env.MAX_CONCURRENT_RENDERS) || 4;
+const { MAX_CONCURRENT_RENDERS = '4', MAX_WAITING_RENDERS = '20' } = process.env;
+const maxConcurrentRenders = Number(MAX_CONCURRENT_RENDERS) || 4;
+const maxWaitingRenders = Number(MAX_WAITING_RENDERS);
 let activeRenders = 0;
 const waiting = [];
 
@@ -23,9 +25,17 @@ function getPage(token) {
   return pages.get(token);
 }
 
-/** Runs `render` once fewer than MAX_CONCURRENT_RENDERS pages are open. */
-async function withRenderSlot(render) {
+/**
+ * Runs `render` once fewer than MAX_CONCURRENT_RENDERS pages are open. At
+ * most MAX_WAITING_RENDERS wait for that; more are turned away, so a flood of
+ * requests can't keep everyone else waiting. With `alwaysWait`, a render
+ * waits however long the line is.
+ */
+async function withRenderSlot(render, alwaysWait) {
   if (activeRenders >= maxConcurrentRenders) {
+    if (!alwaysWait && waiting.length >= maxWaitingRenders) {
+      throw new HttpError(503, 'The server is busy; try again in a few seconds', { 'Retry-After': '10' });
+    }
     await new Promise(resolve => waiting.push(resolve));
   }
   activeRenders++;
@@ -99,8 +109,12 @@ async function screenshotPage(page, token, { width, height, dpr, format }) {
   return page.screenshot({ type: format, fullPage: false });
 }
 
-/** Screenshots `html`, rendered as a page of this server. */
-async function renderImage(html, options) {
+/**
+ * Screenshots `html`, rendered as a page of this server. `alwaysWait` is for
+ * the few renders the server makes for itself, such as the playground's
+ * thumbnails, which shouldn't be turned away when it is busy.
+ */
+async function renderImage(html, options, { alwaysWait = false } = {}) {
   return withRenderSlot(async () => {
     const token = crypto.randomBytes(16).toString('hex');
     pages.set(token, html);
@@ -126,7 +140,7 @@ async function renderImage(html, options) {
       // A page that hung may not close quickly either; the slot doesn't wait for it
       context.close().catch(() => {});
     }
-  });
+  }, alwaysWait);
 }
 
 module.exports = { renderImage, parseRenderOptions, getPage };

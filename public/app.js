@@ -8,7 +8,8 @@ const state = {
   values: {},         // field values by template, so switching back keeps edits
   dpr: '2',
   format: 'webp',
-  objectUrl: null,
+  image: null,        // the rendered image, { url, ratio, stats }, until anything changes
+  mode: 'preview',    // what the stage shows: 'preview', 'sample' or 'image'
 };
 
 const SIZE_PRESETS = ['1200x630', '1080x1080', '1080x1350', '1080x1920'];
@@ -66,7 +67,7 @@ function selectSource(source) {
     index % 2 ? element('code', { textContent: part }) : part));
   if (state.template) {
     renderFields();
-    showSample();
+    updatePreview();
   }
 }
 
@@ -100,7 +101,7 @@ function selectTemplate(name) {
   const { width = 1200, height = 630 } = state.template;
   setSize(width, height);
   renderFields();
-  showSample();
+  updatePreview();
 }
 
 // Fields: the template's variables. With a source, its parameters come
@@ -134,6 +135,7 @@ function fieldGroups() {
       hint: param.description,
       required: !!param.required,
       optional: !param.required,
+      sourceParam: true,
       values: sourceValues,
       value: '',
       placeholder: name === 'url' ? 'https://example.com' : '',
@@ -153,7 +155,13 @@ function allFields() {
 function fieldControl(field) {
   const value = field.values[field.name] ?? field.value;
   const id = `field-${field.name}`;
-  const onInput = event => { field.values[field.name] = event.target.value; updateUrl(); };
+  const onInput = event => {
+    field.values[field.name] = event.target.value;
+    updateUrl();
+    leaveImage();
+    // A source fetches the site, so wait until a URL looks typed
+    schedulePreview(field.sourceParam ? 800 : 300);
+  };
 
   let control;
   if (field.name === 'accent' || /^#[0-9a-f]{6}$/i.test(value)) {
@@ -225,8 +233,15 @@ function renderFields() {
 function setSize(width, height) {
   $('width').value = width;
   $('height').value = height;
+  sizeChanged();
+}
+
+/** A new size needs no new page: the preview's frames just take it. */
+function sizeChanged() {
   syncPreset();
   updateUrl();
+  leaveImage();
+  fitFrames();
 }
 
 function syncPreset() {
@@ -241,7 +256,7 @@ $('preset').addEventListener('change', event => {
 });
 
 for (const id of ['width', 'height']) {
-  $(id).addEventListener('input', () => { syncPreset(); updateUrl(); });
+  $(id).addEventListener('input', sizeChanged);
 }
 
 for (const id of ['dpr', 'format']) {
@@ -251,6 +266,7 @@ for (const id of ['dpr', 'format']) {
     state[id] = button.value;
     setPressed($(id), button.value);
     updateUrl();
+    leaveImage();
   });
 }
 
@@ -263,7 +279,8 @@ function normalizeParams(params) {
   return params;
 }
 
-function buildPath() {
+/** The image's URL path, or with `page`, the template page's that the live preview shows. */
+function buildPath({ page = false } = {}) {
   const query = new URLSearchParams();
   if (state.source) query.set('source', state.source);
 
@@ -276,35 +293,146 @@ function buildPath() {
     query.set(name, value);
   }
 
-  const output = { width: $('width').value, height: $('height').value, dpr: state.dpr, format: state.format };
-  for (const [name, value] of Object.entries(output)) {
-    if (value !== API_DEFAULTS[name]) query.set(name, value);
+  if (!page) {
+    const output = { width: $('width').value, height: $('height').value, dpr: state.dpr, format: state.format };
+    for (const [name, value] of Object.entries(output)) {
+      if (value !== API_DEFAULTS[name]) query.set(name, value);
+    }
   }
 
   const search = query.toString();
-  return `/image/${encodeURIComponent(state.template.name)}${search ? `?${search}` : ''}`;
+  return `/${page ? 'template' : 'image'}/${encodeURIComponent(state.template.name)}${search ? `?${search}` : ''}`;
 }
 
 function updateUrl() {
   if (state.template) $('url').textContent = location.origin + buildPath();
 }
 
-function showSample() {
-  clearResult();
-  $('canvas').classList.add('is-sample');
-  $('badge').hidden = false;
-  const { width = 1200, height = 630 } = state.template;
+// The stage: a live preview of the template as a page, drawn by this browser;
+// with a source but no site yet, the template's example image; after Render,
+// the image itself.
+
+function outputSize() {
+  const clamp = value => Math.min(4096, Math.max(1, Math.round(Number(value)) || 1));
+  return { width: clamp($('width').value), height: clamp($('height').value) };
+}
+
+function showMode(mode) {
+  state.mode = mode;
+  $('frame').hidden = mode !== 'preview';
+  $('output').hidden = mode === 'preview';
+  setPressed($('view'), mode === 'image' ? 'image' : 'preview');
+  $('view').querySelector('[value="preview"]').textContent = mode === 'sample' ? 'Example' : 'Live preview';
+
+  if (mode === 'image') {
+    $('output').src = state.image.url;
+    $('canvas').style.setProperty('--ratio', state.image.ratio);
+    $('stats').textContent = state.image.stats;
+  } else if (mode === 'sample') {
+    const { width = 1200, height = 630 } = state.template;
+    $('canvas').style.setProperty('--ratio', width / height);
+    $('output').src = `/preview/${encodeURIComponent(state.template.name)}`;
+    $('stats').textContent = 'The example uses sample content. Enter your site to see it with yours.';
+  } else {
+    fitFrames();
+  }
+}
+
+/** Gives the frames the image's size and scales them down to the stage. */
+function fitFrames() {
+  if (state.mode !== 'preview') return;
+  const { width, height } = outputSize();
   $('canvas').style.setProperty('--ratio', width / height);
-  $('output').src = `/preview/${encodeURIComponent(state.template.name)}`;
-  $('stats').textContent = state.source
-    ? 'The example uses sample content. Enter your site to render it with yours.'
-    : "The example uses the template's sample content. Render to see yours.";
+  for (const frame of $('frame').querySelectorAll('iframe')) {
+    frame.style.width = `${width}px`;
+    frame.style.height = `${height}px`;
+  }
+  $('frame').style.setProperty('--scale', $('frame').clientWidth / width);
+  $('stats').textContent = `${width} × ${height}  ·  A live preview in your browser; render to get the image`;
+}
+
+new ResizeObserver(fitFrames).observe($('frame'));
+
+/** Anything that changes drops the rendered image, which no longer matches, and shows the preview. */
+function leaveImage() {
+  clearResult();
+  if (state.mode === 'image') showPreview();
+}
+
+function showPreview() {
+  showMode(missingField() ? 'sample' : 'preview');
+}
+
+// The switch: the rendered image is kept until something changes, so switching
+// back to it doesn't render again
+$('view').addEventListener('click', event => {
+  const button = event.target.closest('button');
+  if (!button || button.getAttribute('aria-pressed') === 'true') return;
+  if (button.value === 'preview') showPreview();
+  else if (state.image) showMode('image');
+  else render();
+});
+
+function missingField() {
+  return [...$('form').querySelectorAll('[required]')].find(input => !input.value.trim());
+}
+
+const preview = { timer: null, request: 0 };
+
+function schedulePreview(delay) {
+  clearTimeout(preview.timer);
+  preview.timer = setTimeout(updatePreview, delay);
+}
+
+/**
+ * Loads the template page with the form's values into the hidden frame and
+ * shows it once it has loaded, so the preview never flashes blank. Only the
+ * latest change's page is shown.
+ */
+async function updatePreview() {
+  clearTimeout(preview.timer);
+  if (!state.template) return;
+  const request = ++preview.request;
+
+  if (missingField()) {
+    if (state.mode !== 'image') showMode('sample');
+    return;
+  }
+
+  try {
+    const response = await fetch(buildPath({ page: true }));
+    const html = await response.text();
+    if (request !== preview.request) return;
+    if (!response.ok) {
+      let message = `The server answered ${response.status}`;
+      try { message = JSON.parse(html).error || message; } catch {}
+      throw new Error(message);
+    }
+
+    const frames = [...$('frame').querySelectorAll('iframe')];
+    const shown = frames.find(frame => !frame.hidden);
+    const hidden = frames.find(frame => frame.hidden);
+    await new Promise(resolve => {
+      hidden.onload = resolve;
+      hidden.srcdoc = html;
+    });
+    if (request !== preview.request) return;
+    hidden.hidden = false;
+    shown.hidden = true;
+    if (state.mode !== 'image') {
+      $('error').hidden = true;
+      showMode('preview');
+    }
+  } catch (error) {
+    if (request !== preview.request || state.mode === 'image') return;
+    $('error').textContent = error.message;
+    $('error').hidden = false;
+  }
 }
 
 function clearResult() {
-  if (state.objectUrl) URL.revokeObjectURL(state.objectUrl);
-  state.objectUrl = null;
-  $('download').hidden = true;
+  if (state.image) URL.revokeObjectURL(state.image.url);
+  state.image = null;
   $('error').hidden = true;
 }
 
@@ -312,17 +440,30 @@ function formatBytes(bytes) {
   return bytes < 1024 * 1024 ? `${Math.round(bytes / 1024)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+/** Renders the image and shows it; resolves to whether that worked. */
+function setBusy(busy) {
+  for (const button of [$('render'), $('download'), $('view').querySelector('[value="image"]')]) button.disabled = busy;
+}
+
+async function loadImage(url) {
+  const image = new Image();
+  image.src = url;
+  await image.decode().catch(() => {});
+  return image;
+}
+
 async function render() {
-  const missing = [...$('form').querySelectorAll('[required]')].find(input => !input.value.trim());
+  const missing = missingField();
   if (missing) {
     $('error').textContent = `${missing.labels[0]?.firstChild.textContent ?? 'A field'} is required.`;
     $('error').hidden = false;
-    return missing.focus();
+    missing.focus();
+    return false;
   }
 
   const path = buildPath();
   const started = performance.now();
-  $('render').disabled = true;
+  setBusy(true);
   $('error').hidden = true;
   $('canvas').classList.add('is-busy');
 
@@ -336,32 +477,28 @@ async function render() {
     const blob = await response.blob();
     const seconds = ((performance.now() - started) / 1000).toFixed(1);
     clearResult();
-    state.objectUrl = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    const { naturalWidth: width, naturalHeight: height } = await loadImage(url);
+    state.image = {
+      url,
+      ratio: width / height,
+      stats: [
+        `${width} × ${height}`,
+        state.format === 'jpeg' ? 'JPEG' : state.format === 'png' ? 'PNG' : 'WebP',
+        formatBytes(blob.size),
+        `${seconds} s`,
+      ].join('  ·  '),
+    };
+    showMode('image');
 
-    const image = $('output');
-    image.src = state.objectUrl;
-    await image.decode().catch(() => {});
-    $('canvas').style.setProperty('--ratio', image.naturalWidth / image.naturalHeight);
-    $('canvas').classList.remove('is-sample');
-    $('badge').hidden = true;
-
-    $('stats').textContent = [
-      `${image.naturalWidth} × ${image.naturalHeight}`,
-      state.format === 'jpeg' ? 'JPEG' : state.format === 'png' ? 'PNG' : 'WebP',
-      formatBytes(blob.size),
-      `${seconds} s`,
-    ].join('  ·  ');
-
-    const download = $('download');
-    download.href = state.objectUrl;
-    download.download = `${state.template.name}.${state.format === 'jpeg' ? 'jpg' : state.format}`;
-    download.hidden = false;
     if (matchMedia('(max-width: 900px)').matches) $('canvas').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return true;
   } catch (error) {
     $('error').textContent = error.message;
     $('error').hidden = false;
+    return false;
   } finally {
-    $('render').disabled = false;
+    setBusy(false);
     $('canvas').classList.remove('is-busy');
     showAllowance();
   }
@@ -379,21 +516,43 @@ document.addEventListener('keydown', event => {
   }
 });
 
+// Saves the image shown, or renders it first from the preview. Any change
+// leaves the image, so the one shown always matches the form.
+$('download').addEventListener('click', async () => {
+  if (!state.image && !(await render())) return;
+  const extension = state.format === 'jpeg' ? 'jpg' : state.format;
+  element('a', { href: state.image.url, download: `${state.template.name}.${extension}` }).click();
+});
+
 $('copy').addEventListener('click', async () => {
   await navigator.clipboard.writeText($('url').textContent);
   $('copy').textContent = 'Copied';
   setTimeout(() => { $('copy').textContent = 'Copy'; }, 1500);
 });
 
-// What this visitor has left of the server's hourly limit, if it has one
+// What this visitor has left of the server's image limits, if it has any: the
+// window that is used up, or else the one with the least left of those an
+// hour or longer (a minute's allowance is no news to someone clicking Render)
+
+const HOUR = 60 * 60 * 1000;
+const WINDOW_MS = { second: 1000, minute: 60 * 1000, hour: HOUR, day: 24 * HOUR };
+
+function waitText(time) {
+  const seconds = Math.max(1, Math.ceil((time - Date.now()) / 1000));
+  return seconds < 60 ? `${seconds} s` : seconds < 2 * 3600 ? `${Math.ceil(seconds / 60)} min` : `${Math.ceil(seconds / 3600)} h`;
+}
 
 async function showAllowance() {
-  const { rateLimit } = await fetch('/limits').then(response => response.json()).catch(() => ({}));
-  if (!rateLimit) return;
-  const minutes = Math.max(1, Math.ceil((rateLimit.resetAt - Date.now()) / 60000));
-  $('allowance').textContent = rateLimit.remaining > 0
-    ? `${rateLimit.remaining} of ${rateLimit.perHour} renders left this hour`
-    : `No renders left; more in ${minutes} min`;
+  const { rateLimits } = await fetch('/limits').then(response => response.json()).catch(() => ({}));
+  const windows = rateLimits?.images ?? [];
+  if (!windows.length) return;
+
+  const full = windows.filter(window => window.remaining === 0).sort((a, b) => b.resetAt - a.resetAt)[0];
+  const long = windows.filter(window => WINDOW_MS[window.per] >= HOUR);
+  const shown = (long.length ? long : windows).reduce((least, window) => (window.remaining < least.remaining ? window : least));
+  $('allowance').textContent = full
+    ? `No renders left; more in ${waitText(full.resetAt)}`
+    : `${shown.remaining} of ${shown.limit} renders left ${shown.per === 'day' ? 'today' : `this ${shown.per}`}`;
   $('allowance').hidden = false;
 }
 
