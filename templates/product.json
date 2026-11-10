@@ -1,0 +1,14 @@
+{
+  "title": "Product",
+  "description": "Tag, headline and summary beside a product screenshot on a tinted panel, or beside shapes in the accent colours without one",
+  "fields": {
+    "tag": "New feature",
+    "title": "See every change before it goes live",
+    "description": "Edit the words, swap the colours and watch the result update right in your browser.",
+    "image": "https://github.com/user-attachments/assets/ef8b0298-8240-4f1f-9458-b0fadf19a165",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#2563EB",
+    "highlight": "#F97316"
+  }
+}

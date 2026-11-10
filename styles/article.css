@@ -15,11 +15,19 @@ body {
 
 img { display: block; }
 
+/* The clip reaches a little past the box, or tight line heights would cut the
+   last line's descenders (g, y) and the first line's accents (İ, É). Browsers
+   that still paint the hidden lines (most, today) get only as much as keeps
+   those lines' tops out of sight; the renderer doesn't paint them. */
 .clamp {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: var(--lines, 3);
-  overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: 0.09em;
+}
+@supports (line-clamp: 1) {
+  .clamp { overflow-clip-margin: 0.2em; }
 }
 
 body {

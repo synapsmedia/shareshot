@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{title}}</title>
+  <style>:root { --accent: {{cssColor accent "#2563EB"}}; --highlight: {{cssColor highlight "#F97316"}}; }</style>
+  {{{styleTag}}}
+</head>
+<body>
+  <div class="circle" aria-hidden="true"></div>
+  <main>
+    <header class="site">{{#if logo}}<img class="logo" src="{{logo}}" alt="">{{/if}}{{#if siteName}}<span class="site-name">{{siteName}}</span>{{/if}}</header>
+    <div class="content">
+      {{#if tag}}<p class="tag">{{tag}}</p>{{/if}}
+      <h1 class="clamp">{{title}}</h1>
+    </div>
+    <ol class="flow">
+      {{#if step1}}<li class="step"><p class="step-title clamp">{{step1}}</p>{{#if step1Note}}<p class="step-note clamp">{{step1Note}}</p>{{/if}}</li>{{/if}}
+      {{#if step2}}<li class="step"><p class="step-title clamp">{{step2}}</p>{{#if step2Note}}<p class="step-note clamp">{{step2Note}}</p>{{/if}}</li>{{/if}}
+      {{#if step3}}<li class="step"><p class="step-title clamp">{{step3}}</p>{{#if step3Note}}<p class="step-note clamp">{{step3Note}}</p>{{/if}}</li>{{/if}}
+    </ol>
+  </main>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "title": "Spotlight",
+  "description": "A bold headline on the accent colour, with an image in a tilted card leaning on a second-colour circle",
+  "fields": {
+    "tag": "Just launched",
+    "title": "Everything your team needs, on one screen",
+    "description": "Plans, files and conversations in one place, so nothing gets lost between tools.",
+    "image": "https://github.com/user-attachments/assets/ef8b0298-8240-4f1f-9458-b0fadf19a165",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#4F46E5",
+    "highlight": "#FB923C"
+  }
+}

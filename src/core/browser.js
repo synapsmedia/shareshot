@@ -16,6 +16,10 @@ async function initBrowser() {
       '--disable-background-timer-throttling',
       '--disable-backgrounding-occluded-windows',
       '--disable-renderer-backgrounding',
+      // Clamped text (.clamp in the templates) stops painting after its last line.
+      // Without this Chromium still paints the hidden lines, and the clip that lets
+      // the last line's descenders show would let their accents show too.
+      '--enable-blink-features=CSSLineClamp',
     ]
   });
   console.log('Browser initialized');

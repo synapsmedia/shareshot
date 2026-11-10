@@ -1,0 +1,194 @@
+@import url('https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 1rem is about 1% of the width, less on wide banners, so one layout fits
+   every size from 1200×630 to a 1080×1920 story. */
+html { font-size: min(1vw, 1.6vh); }
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  --on-accent: oklch(from var(--accent) clamp(0, (0.72 - l) * 100, 1) 0 0);
+  /* Text colour: a very dark shade of the accent. */
+  --ink: oklch(from var(--accent) 0.22 calc(c * 0.5) h);
+  --tint: color-mix(in oklch, var(--accent) 11%, #FFFFFF);
+}
+
+img { display: block; }
+
+/* The clip reaches a little past the box, or tight line heights would cut the
+   last line's descenders (g, y) and the first line's accents (İ, É). Browsers
+   that still paint the hidden lines (most, today) get only as much as keeps
+   those lines' tops out of sight; the renderer doesn't paint them. */
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 3);
+  overflow: clip;
+  overflow-clip-margin: 0.09em;
+}
+@supports (line-clamp: 1) {
+  .clamp { overflow-clip-margin: 0.2em; }
+}
+
+body {
+  position: relative;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ink);
+  background: #FFFFFF;
+}
+
+/* The second colour's circle, peeking in at the top right. */
+.circle {
+  position: absolute;
+  right: -17rem;
+  top: -17rem;
+  width: 36rem;
+  height: 36rem;
+  border-radius: 50%;
+  background: var(--highlight);
+}
+
+main {
+  position: relative;
+  height: 100%;
+  padding: 5.6rem 6.4rem 6rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.site { display: flex; align-items: center; gap: 1.6rem; }
+.logo { width: 4.8rem; height: 4.8rem; border-radius: 1.2rem; object-fit: cover; }
+.site-name { font-size: 2.6rem; font-weight: 700; }
+
+.content {
+  margin-top: 4.4rem;
+  max-width: 96rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.tag {
+  color: var(--accent);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.tag::before {
+  content: '';
+  display: inline-block;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-right: 1.2rem;
+  border-radius: 50%;
+  background: var(--highlight);
+  vertical-align: 0.1em;
+}
+
+h1 {
+  --lines: 2;
+  font-size: 5.6rem;
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+/* ─── The flow: equal cards, an arrow in each gap ─── */
+.flow {
+  list-style: none;
+  margin-top: auto;
+  display: flex;
+  gap: 7.6rem;
+  counter-reset: step;
+}
+
+.step {
+  counter-increment: step;
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 19.6rem;
+  padding: 2.6rem 2.8rem 2.8rem;
+  border-radius: 2.4rem;
+  background: var(--tint);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Step number: 01, 02, 03 */
+.step::after {
+  content: counter(step, decimal-leading-zero);
+  order: -1;
+  color: var(--accent);
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* The arrow, centred in the gap before every step but the first. */
+.step + .step::before {
+  content: '';
+  position: absolute;
+  left: -6.2rem;
+  top: 50%;
+  width: 4.8rem;
+  height: 4.8rem;
+  margin-top: -2.4rem;
+  background: var(--ink);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M6 24h32M28 13l11 11-11 11' fill='none' stroke='black' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M6 24h32M28 13l11 11-11 11' fill='none' stroke='black' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+.step-title {
+  --lines: 2;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.step-note {
+  --lines: 2;
+  color: #50545E;
+  font-size: 2rem;
+  line-height: 1.35;
+}
+
+/* Where the flow ends: the accent colour. */
+.step:last-child { background: var(--accent); color: var(--on-accent); }
+.step:last-child::after { color: inherit; opacity: 0.7; }
+.step:last-child .step-note { color: inherit; opacity: 0.85; }
+
+/* Near square, the steps stay side by side but get more room. */
+@media (min-aspect-ratio: 9/10) and (max-aspect-ratio: 5/4) {
+  h1 { --lines: 3; font-size: 6.8rem; }
+  .flow { gap: 6rem; }
+  .step { min-height: 30rem; padding: 2.6rem 2.4rem 2.8rem; }
+  .step + .step::before { left: -5.4rem; }
+  .step-title { --lines: 3; font-size: 3.4rem; }
+  .step-note { --lines: 4; font-size: 2.4rem; }
+}
+
+/* Upright (taller than 9:10), the steps stack and the arrows point down. */
+@media (max-aspect-ratio: 9/10) {
+  main { padding: 8rem; }
+  .site-name { font-size: 3.2rem; }
+  .logo { width: 6.4rem; height: 6.4rem; }
+  .content { margin-top: auto; gap: 2rem; }
+  .tag { font-size: 2.6rem; }
+  h1 { --lines: 4; font-size: 7.6rem; }
+  .flow { flex-direction: column; gap: 6.4rem; margin: 6.4rem 0 auto; }
+  .step { flex: none; min-height: 0; padding: 3rem 3.6rem; gap: 1rem; }
+  .step::after { font-size: 2.2rem; }
+  .step + .step::before { left: 50%; top: -5.6rem; margin: 0 0 0 -2.4rem; rotate: 90deg; }
+  .step-title { font-size: 4rem; }
+  .step-note { font-size: 2.8rem; }
+  .circle { right: -24rem; top: -24rem; width: 50rem; height: 50rem; }
+}

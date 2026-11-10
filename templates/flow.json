@@ -1,0 +1,18 @@
+{
+  "title": "Flow",
+  "description": "A headline above up to three numbered steps with arrows between them; the last step, where the flow ends, is filled with the accent colour",
+  "fields": {
+    "tag": "How it works",
+    "title": "From sign-up to launch in three steps",
+    "step1": "Create an account",
+    "step1Note": "Free to start, no card needed",
+    "step2": "Set up your project",
+    "step2Note": "Import what you have or start fresh",
+    "step3": "Go live",
+    "step3Note": "Share it with everyone in one click",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#2563EB",
+    "highlight": "#F97316"
+  }
+}

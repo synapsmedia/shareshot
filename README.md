@@ -198,8 +198,12 @@ The built-in ones read the [common variables](#common-variables) and fit any siz
 | `stat` | One big number and what it counts | `value`, e.g. `12,400`, and `label` |
 | `podcast` | Cover art, episode and title, with a waveform | `episode`, `duration` |
 | `code` | A highlighted snippet in a window; `title` is its file name | `code`, `language` (any [highlight.js](https://highlightjs.org) common language) |
+| `product` | Headline and summary beside a screenshot on a tinted panel, or beside shapes in the accent colours without one | `highlight`, a second colour |
+| `spotlight` | A bold headline on the accent colour, with the image in a tilted card | `highlight`, a second colour |
+| `showcase` | A centred headline over a browser window that holds a screenshot | `highlight`, a second colour |
+| `flow` | A headline above up to three numbered steps with arrows between them; the last one is filled with the accent colour | `step1`–`step3`, each with an optional `step1Note`–`step3Note`; `highlight` |
 
-Their example values use images from synapsmedia.com, so the playground thumbnails need the server to reach the internet.
+Their example values use images from synapsmedia.com and GitHub, so the playground thumbnails need the server to reach the internet.
 
 ### Template metadata
 

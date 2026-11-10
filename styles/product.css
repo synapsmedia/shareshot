@@ -1,0 +1,174 @@
+@import url('https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 1rem is about 1% of the width, less on wide banners, so one layout fits
+   every size from 1200×630 to a 1080×1920 story. */
+html { font-size: min(1vw, 1.6vh); }
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  --on-accent: oklch(from var(--accent) clamp(0, (0.72 - l) * 100, 1) 0 0);
+  /* Text colour: a very dark shade of the accent. */
+  --ink: oklch(from var(--accent) 0.22 calc(c * 0.5) h);
+  --tint: color-mix(in oklch, var(--accent) 11%, #FFFFFF);
+}
+
+img { display: block; }
+
+/* The clip reaches a little past the box, or tight line heights would cut the
+   last line's descenders (g, y) and the first line's accents (İ, É). Browsers
+   that still paint the hidden lines (most, today) get only as much as keeps
+   those lines' tops out of sight; the renderer doesn't paint them. */
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 3);
+  overflow: clip;
+  overflow-clip-margin: 0.09em;
+}
+@supports (line-clamp: 1) {
+  .clamp { overflow-clip-margin: 0.2em; }
+}
+
+body {
+  position: relative;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ink);
+  background: #FFFFFF;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+  width: 54%;
+  height: 100%;
+  padding: 6.4rem 0 6.4rem 6.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4rem;
+}
+.no-image main { width: 62%; }
+
+.site { display: flex; align-items: center; gap: 1.6rem; }
+.logo { width: 4.8rem; height: 4.8rem; border-radius: 1.2rem; object-fit: cover; }
+.site-name { font-size: 2.6rem; font-weight: 700; }
+
+.tag {
+  margin-bottom: 2.2rem;
+  color: var(--accent);
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.tag::before {
+  content: '';
+  display: inline-block;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-right: 1.2rem;
+  border-radius: 50%;
+  background: var(--highlight);
+  vertical-align: 0.1em;
+}
+
+h1 {
+  --lines: 4;
+  font-size: 6.2rem;
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.no-image h1 { font-size: 7.2rem; }
+
+.description {
+  margin-top: 2.2rem;
+  color: #50545E;
+  font-size: 2.6rem;
+  line-height: 1.38;
+}
+
+/* The screenshot sits on a tinted panel and runs off its right and bottom edges. */
+.panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 46%;
+  background: var(--tint);
+  overflow: hidden;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  right: -15rem;
+  top: -15rem;
+  width: 30rem;
+  height: 30rem;
+  border-radius: 50%;
+  background: var(--highlight);
+}
+.shot {
+  position: absolute;
+  left: 5.6rem;
+  top: 9.6rem;
+  bottom: -6rem;
+  width: 64rem;
+  border-radius: 1.8rem;
+  overflow: hidden;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 0.1rem rgb(0 0 0 / 0.08), 0 2.4rem 6rem oklch(from var(--ink) l c h / 0.2);
+}
+.shot img { width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+
+/* Without an image: a few shapes in the accent colours. */
+.shapes {
+  position: absolute;
+  right: 6.4rem;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  grid-template: repeat(4, 12rem) / repeat(3, 12rem);
+  gap: 1.8rem;
+}
+.shapes i { border-radius: 6rem; }
+.shapes i:nth-child(1) { grid-area: 1 / 1; background: var(--accent); }
+.shapes i:nth-child(2) { grid-area: 1 / 2 / 2 / 4; background: var(--highlight); }
+.shapes i:nth-child(3) { grid-area: 2 / 1 / 4 / 2; background: var(--ink); }
+.shapes i:nth-child(4) { grid-area: 2 / 2; background: var(--tint); border-radius: 6rem 6rem 0 6rem; }
+.shapes i:nth-child(5) { grid-area: 2 / 3 / 4 / 4; background: var(--accent); }
+.shapes i:nth-child(6) { grid-area: 3 / 2; background: var(--highlight); }
+.shapes i:nth-child(7) { grid-area: 4 / 2 / 5 / 4; background: var(--tint); }
+
+/* Upright (taller than 9:10), the screenshot or the shapes go below the text. */
+@media (max-aspect-ratio: 9/10) {
+  body { display: flex; flex-direction: column; }
+  main, .no-image main { flex: 1 0 auto; width: 100%; height: auto; padding: 8rem 8rem 6rem; }
+  .site-name { font-size: 3.2rem; }
+  .logo { width: 6.4rem; height: 6.4rem; }
+  .tag { font-size: 2.6rem; }
+  h1, .no-image h1 { --lines: 5; font-size: 8.4rem; }
+  .description { font-size: 3.4rem; }
+  .panel { position: relative; flex: 0 1 50vh; width: 100%; }
+  .shot { left: 8rem; top: 8rem; bottom: -6rem; width: 110rem; }
+  .shapes {
+    position: relative;
+    top: auto; right: auto; translate: none;
+    flex: 0 1 40vh;
+    margin: 0 8rem 8rem;
+    grid-template: repeat(3, 1fr) / repeat(4, 1fr);
+    gap: 2.4rem;
+  }
+  .shapes i:nth-child(1) { grid-area: 1 / 1; }
+  .shapes i:nth-child(2) { grid-area: 1 / 2 / 2 / 4; }
+  .shapes i:nth-child(3) { grid-area: 2 / 1 / 4 / 2; }
+  .shapes i:nth-child(4) { grid-area: 1 / 4; }
+  .shapes i:nth-child(5) { grid-area: 2 / 2 / 3 / 4; }
+  .shapes i:nth-child(6) { grid-area: 2 / 4 / 4 / 5; }
+  .shapes i:nth-child(7) { grid-area: 3 / 2 / 4 / 4; }
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Showcase",
+  "description": "A centred headline over a browser window rising from the bottom edge, for product screenshots. Without an image, the headline and summary stand alone",
+  "fields": {
+    "tag": "Product tour",
+    "title": "A workspace that stays out of your way",
+    "description": "Fast, quiet and focused, from the first click to the last.",
+    "image": "https://github.com/user-attachments/assets/ef8b0298-8240-4f1f-9458-b0fadf19a165",
+    "logo": "https://www.synapsmedia.com/assets/images/apple-touch-icon.png",
+    "siteName": "Synaps Media",
+    "accent": "#0D9488",
+    "highlight": "#F43F5E"
+  }
+}

@@ -1,0 +1,151 @@
+@import url('https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 1rem is about 1% of the width, less on wide banners, so one layout fits
+   every size from 1200×630 to a 1080×1920 story. */
+html { font-size: min(1vw, 1.6vh); }
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  --on-accent: oklch(from var(--accent) clamp(0, (0.72 - l) * 100, 1) 0 0);
+  /* Text colour: a very dark shade of the accent. */
+  --ink: oklch(from var(--accent) 0.22 calc(c * 0.5) h);
+  --tint: color-mix(in oklch, var(--accent) 11%, #FFFFFF);
+}
+
+img { display: block; }
+
+/* The clip reaches a little past the box, or tight line heights would cut the
+   last line's descenders (g, y) and the first line's accents (İ, É). Browsers
+   that still paint the hidden lines (most, today) get only as much as keeps
+   those lines' tops out of sight; the renderer doesn't paint them. */
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 3);
+  overflow: clip;
+  overflow-clip-margin: 0.09em;
+}
+@supports (line-clamp: 1) {
+  .clamp { overflow-clip-margin: 0.2em; }
+}
+
+body {
+  position: relative;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle, color-mix(in oklch, var(--accent) 22%, transparent) 0.15rem, transparent 0.16rem) 0 0 / 2.8rem 2.8rem,
+    color-mix(in oklch, var(--accent) 5%, #FFFFFF);
+}
+
+.dot { position: absolute; border-radius: 50%; }
+.dot-a { width: 26rem; height: 26rem; left: -11rem; bottom: -12rem; background: var(--accent); }
+.dot-b { width: 18rem; height: 18rem; right: -6rem; top: -7rem; background: var(--highlight); }
+
+main {
+  position: relative;
+  height: 100%;
+  padding-top: 4.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.site { display: flex; align-items: center; gap: 1.4rem; }
+.logo { width: 4.2rem; height: 4.2rem; border-radius: 1rem; object-fit: cover; }
+.site-name { font-size: 2.4rem; font-weight: 700; }
+
+.content {
+  margin-top: 3rem;
+  width: 98rem;
+  max-width: calc(100% - 8rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4rem;
+}
+
+.tag {
+  color: var(--accent);
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1 {
+  --lines: 2;
+  font-size: 5.2rem;
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.description {
+  --lines: 2;
+  max-width: 76rem;
+  color: #50545E;
+  font-size: 2.8rem;
+  line-height: 1.35;
+}
+
+/* Without an image, the headline takes the middle. */
+.no-image main { justify-content: center; padding-top: 0; }
+.no-image .site { position: absolute; top: 5.6rem; }
+.no-image .content { margin-top: 0; width: 90rem; gap: 2.4rem; }
+.no-image h1 { --lines: 3; font-size: 8rem; }
+.no-image .tag { font-size: 2rem; }
+
+/* A browser window that rises from the bottom edge. */
+.window {
+  position: relative;
+  margin-top: 3.4rem;
+  width: 92rem;
+  max-width: calc(100% - 8rem);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.6rem 1.6rem 0 0;
+  overflow: hidden;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 0.1rem rgb(0 0 0 / 0.08), 0 -0.6rem 5rem oklch(from var(--ink) l c h / 0.14);
+}
+.bar {
+  flex: none;
+  height: 3.4rem;
+  padding: 0 1.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: var(--tint);
+}
+.bar i { width: 1.1rem; height: 1.1rem; border-radius: 50%; background: color-mix(in oklch, var(--accent) 25%, #FFFFFF); }
+.bar i:first-child { background: var(--highlight); }
+.window img { flex: 1; min-height: 0; width: 100%; object-fit: cover; object-position: top center; }
+
+@media (orientation: portrait) {
+  main { padding-top: 8rem; }
+  .site-name { font-size: 3.2rem; }
+  .logo { width: 6rem; height: 6rem; }
+  .content { gap: 2.4rem; }
+  .tag, .no-image .tag { font-size: 2.6rem; }
+  h1 { --lines: 4; font-size: 7.6rem; }
+  .no-image h1 { --lines: 6; font-size: 10rem; }
+  .description { --lines: 4; font-size: 3.6rem; }
+  .no-image .site { top: 8rem; }
+  /* The content takes the middle, and the screenshot keeps its own shape below it. */
+  .content { margin-block: auto; }
+  .window { flex: 0 1 auto; margin-top: 0; width: 100%; max-width: calc(100% - 12rem); }
+  .window img { flex: 0 1 auto; height: auto; }
+  .bar { height: 4.4rem; gap: 1.1rem; padding: 0 2.2rem; }
+  .bar i { width: 1.5rem; height: 1.5rem; }
+  .dot-a { width: 40rem; height: 40rem; left: -18rem; bottom: -18rem; }
+  .dot-b { width: 28rem; height: 28rem; right: -10rem; top: -10rem; }
+}
